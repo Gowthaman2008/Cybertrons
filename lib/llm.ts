@@ -19,13 +19,18 @@ const MODEL = "gemini-3.6-flash";
 const VALID_VERDICTS: Verdict[] = ["Low Risk", "Medium Risk", "High Risk"];
 
 function buildSystemInstruction(): string {
-  return `You are a fraud-detection assistant embedded in a student-facing tool called ScamCheck.
-You will be given (1) the raw text (or an image of a document) of a job/internship offer a student received, and (2) a list of
-red flags a deterministic rule engine already found in that text.
+  return `You are a fraud-detection assistant embedded in a student-facing tool called ScamCheck - Scam Forensics Lab.
+You will be given (1) the raw text (or an image of a document) of a job/internship offer a student received, (2) a list of red flags a deterministic rule engine already found in that text, and (3) a machine learning classifier's assessment on how similar this language is to known scam patterns.
 
-Your job: assess how likely this offer is to be a scam, using the rule flags as a starting point but
-also reading the raw text or the uploaded image for anything the rules missed (tone, plausibility, internal inconsistencies,
-role/pay mismatch, requests that don't fit how real hiring works, etc).
+Your job:
+1. Assess how likely this offer is to be a scam, referencing both the rules flags (Layer 1) and the machine learning classifier confidence (Layer 2) in your final synthesis (explanation).
+2. Synthesize these inputs into a 2-4 sentence explanation addressed directly to the student.
+3. Compute risk scores (0-100) across 5 categories for the radar chart visualization:
+   - paymentRequestRisk: Risk of requests for training fees, laptop shipping keys, refundable security deposits, or direct bank transfer.
+   - urgencyLanguage: Risk of manufactured panic, immediate joining mandates, or limited time frames.
+   - domainLegitimacy: Risk of recruiting via Gmail/Yahoo domain or domain name spelling mismatches.
+   - languageQuality: Risk of typos, irregular spacing, or all caps.
+   - offerRealism: Risk of unrealistically high stipend/salaries compared to the effort described.
 
 Guidance for scoring:
 - 0-29 -> "Low Risk"
@@ -36,7 +41,7 @@ Never invent facts about a specific real company. If information is insufficient
 explanation rather than guessing.`;
 }
 
-function buildUserMessage(input: OfferInput, ruleFlags: RuleFlag[]): string {
+function buildUserMessage(input: OfferInput, ruleFlags: RuleFlag[], mlScore: number): string {
   const meta = [
     input.companyName ? `Company name given: ${input.companyName}` : null,
     input.senderEmail ? `Sender email: ${input.senderEmail}` : null,
@@ -62,8 +67,11 @@ function buildUserMessage(input: OfferInput, ruleFlags: RuleFlag[]): string {
 ADDITIONAL FIELDS PROVIDED BY THE STUDENT:
 ${meta || "(none provided)"}
 
-RULE-BASED FLAGS ALREADY DETECTED:
-${flagsList}`;
+LAYER 1 RED FLAGS ALREADY DETECTED:
+${flagsList}
+
+LAYER 2 MACHINE LEARNING CLASSIFIER ANALYSIS:
+- Classifier confidence score: ${mlScore}% match to historical scam text profiles.`;
 }
 
 function clampScore(n: unknown): number {
@@ -86,7 +94,8 @@ function coerceVerdict(v: unknown, score: number): Verdict {
  */
 export async function getLlmAssessment(
   input: OfferInput,
-  ruleFlags: RuleFlag[]
+  ruleFlags: RuleFlag[],
+  mlScore: number
 ): Promise<LlmAssessment> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -109,7 +118,7 @@ export async function getLlmAssessment(
       },
       explanation: {
         type: Type.STRING,
-        description: "2-4 sentences, plain English, addressed directly to the student, explaining the overall assessment and what stands out most — do not just repeat the rule flags verbatim, synthesize.",
+        description: "2-4 sentences, plain English, addressed directly to the student, explaining the overall assessment, synthesizing the rule-based flags (Layer 1) and the ML score (Layer 2) into a cohesive warning.",
       },
       additionalFlags: {
         type: Type.ARRAY,
@@ -118,8 +127,34 @@ export async function getLlmAssessment(
         },
         description: "Short strings for any NEW concerns you noticed that were NOT in the provided rule flags list; empty array if none.",
       },
+      categoryScores: {
+        type: Type.OBJECT,
+        properties: {
+          paymentRequestRisk: {
+            type: Type.INTEGER,
+            description: "Risk score (0-100) based on upfront fees, payments requested, or sensitive banking details.",
+          },
+          urgencyLanguage: {
+            type: Type.INTEGER,
+            description: "Risk score (0-100) based on pressure tactics, quick response times, or slot limitations.",
+          },
+          domainLegitimacy: {
+            type: Type.INTEGER,
+            description: "Risk score (0-100) based on domain discrepancies or consumer email handles.",
+          },
+          languageQuality: {
+            type: Type.INTEGER,
+            description: "Risk score (0-100) based on typos, casing abnormalities, or structural grammar flaws.",
+          },
+          offerRealism: {
+            type: Type.INTEGER,
+            description: "Risk score (0-100) based on role tasks vs compensation mismatch.",
+          },
+        },
+        required: ["paymentRequestRisk", "urgencyLanguage", "domainLegitimacy", "languageQuality", "offerRealism"],
+      },
     },
-    required: ["riskScore", "verdict", "explanation", "additionalFlags"],
+    required: ["riskScore", "verdict", "explanation", "additionalFlags", "categoryScores"],
   };
 
   const contents: any[] = [];
@@ -132,7 +167,7 @@ export async function getLlmAssessment(
     });
   }
   contents.push({
-    text: buildUserMessage(input, ruleFlags),
+    text: buildUserMessage(input, ruleFlags, mlScore),
   });
 
   const response = await ai.models.generateContent({
@@ -167,5 +202,13 @@ export async function getLlmAssessment(
     ? parsed.additionalFlags.filter((f: unknown): f is string => typeof f === "string")
     : [];
 
-  return { riskScore, verdict, explanation, additionalFlags };
+  const categoryScores = {
+    paymentRequestRisk: clampScore(parsed.categoryScores?.paymentRequestRisk),
+    urgencyLanguage: clampScore(parsed.categoryScores?.urgencyLanguage),
+    domainLegitimacy: clampScore(parsed.categoryScores?.domainLegitimacy),
+    languageQuality: clampScore(parsed.categoryScores?.languageQuality),
+    offerRealism: clampScore(parsed.categoryScores?.offerRealism),
+  };
+
+  return { riskScore, verdict, explanation, additionalFlags, categoryScores };
 }

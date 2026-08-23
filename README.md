@@ -1,113 +1,123 @@
-# ScamCheck — Opportunity Verification
+# ScamCheck — Scam Forensics Lab
 
 Built for **Hackspora 2.0 (PS3)**.
 
-Students receive internship/job opportunities over WhatsApp, email, and social media and
-often have no quick way to tell a real offer from a scam. ScamCheck lets a student paste
-the message they received and get back, in seconds, a risk score, a plain-English
-breakdown of exactly what looks suspicious, and a clear next step.
+ScamCheck is an advanced opportunity verification and cyber-forensics platform. Students receive internship/job opportunities over WhatsApp, email, and social media, and often have no quick way to tell a real offer from a scam. ScamCheck parses the offer letter or chat screenshot, passes it through a multi-layered forensics pipeline, and generates a structured incident file with highlighted evidence tooltips, risk metrics, and cosine similarity matches against known fraud types.
+
+---
 
 ## What it does
 
-1. You paste the offer text (plus optional sender email/phone, company name, and
-   offered pay).
-2. A **deterministic rule engine** scans the text locally for known scam patterns —
-   upfront payment requests, "no interview needed," urgency language, unrealistic pay,
-   generic greetings, free-email-domain senders, poor grammar, shortened links, and
-   requests for sensitive info (bank details, Aadhaar, OTP, etc).
-3. The raw text plus those flags are sent to **Claude**, which adds a natural-language
-   read of the offer and a final calibrated risk score (0–100) with a verdict.
-4. You get a combined result: score, verdict, every flag found (rule-based and
-   AI-added), and a recommendation for what to do next.
-5. Recent checks from the current session are listed in a history panel — nothing is
-   persisted server-side, and there's no login.
+1. **Dual Scanner**: Paste raw text or upload screenshots/images of internship or job offers (processed using Gemini's multimodal computer-vision capabilities).
+2. **Three-Layer Forensics Pipeline**:
+   - **Layer 1 (Deterministic Rules)**: Extracts pattern flags locally for upfront fee payments, skips-interview indicators, extreme urgency keywords, or suspicious banking credentials pre-hire.
+   - **Layer 2 (Lightweight ML Classifier)**: Runs a JS-native vectorizer + Logistic Regression model trained on illustrative recruiting datasets to calculate a scam resemblance probability.
+   - **Layer 3 (LLM Synthesizer)**: Query Gemini with Layer 1 and Layer 2 outputs as context to write a unified forensic explanation and break down risk values.
+3. **Forensic Category Breakdown**: Scores risk across 5 distinct axes and renders a custom interactive SVG Radar Chart.
+4. **Cosine Similarity Matcher**: Runs a TF-IDF comparison against a library of 10 real-world scam templates to report which exact profile this document resembles.
+5. **Psychology Explainer Toggle**: Pulls a turn-by-turn social-engineering breakdown of triggers (Urgency, Authority, Greed, Commitment) active in the message.
+6. **AI Action Station**: Drafts safe copy-pasteable rejection messages or pre-formatted Placement Cell report emails based on the incident findings.
+7. **Gamified Cybersecurity Simulator**: Play through realistic scenarios in an awareness game to train your eyes on warning cues.
 
-## Tech stack
+---
 
-- **Framework**: Next.js 14 (App Router, TypeScript) — single deployable app, API routes
-  double as the backend
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router, TypeScript)
 - **UI**: React + Tailwind CSS
-- **AI**: Anthropic API (`@anthropic-ai/sdk`), called server-side only
+- **AI Backend**: Google Gen AI SDK (`@google/genai`) querying `gemini-3.6-flash`
 - **Deployment**: Vercel
 
-## How the risk scoring works
+---
 
-Scoring happens in two layers (`lib/rules.ts` and `lib/llm.ts`, orchestrated in
-`app/api/analyze/route.ts`):
+## How the multi-layer pipeline works
 
-**1. Rule-based pass (always runs, no API cost)**
-Ten independent checks each look for a specific scam pattern (see `lib/rules.ts` for the
-full list and the exact regexes/keyword lists used). Each triggered check has a fixed
-severity weight — `low` (+6), `medium` (+12), or `high` (+22) — and the rule score is the
-sum of triggered weights, capped at 100. This layer is fully deterministic and doesn't
-depend on the AI being available.
+Scoring and analysis are orchestrated in [`app/api/analyze/route.ts`](file:///d:/HACKATHON/scamcheck/app/api/analyze/route.ts):
 
-**2. LLM pass**
-The offer text and the rule flags are sent to Claude with a system prompt that
-constrains it to return **only** a JSON object:
-`{ riskScore, verdict, explanation, additionalFlags }` — no free-form chat. Claude uses
-the rule flags as a starting point but also reads the raw text for anything the rules
-missed (tone, plausibility, role/pay mismatch, internal inconsistencies).
+### Layer 1: Rule-Based Matcher (Rules Engine)
+Ten independent checks look for key flags (e.g. `upfront-payment`, `no-interview`, `domain-mismatch`). Each flag adds score points based on severity (`low: +6`, `medium: +12`, `high: +22`), capped at 100%.
 
-**Final result**: when the LLM call succeeds, its `riskScore`/`verdict` are shown as the
-authoritative result (the rule flags are still shown alongside it). If the LLM call fails
-for any reason (missing key, rate limit, network error), the app **gracefully degrades**
-to the rule-based score/verdict instead of breaking, and says so in the UI.
+### Layer 2: Machine Learning Classifier
+- **Model File**: [`lib/classifier.ts`](file:///d:/HACKATHON/scamcheck/lib/classifier.ts)
+- **Algorithm**: TF-IDF Vectorization + Logistic Regression.
+- **Training Data**: Labeled dataset of 40 representative recruiting text profiles (20 scam templates and 20 legitimate corporate messages) included inside the classifier code.
+- **Execution**: The model is trained dynamically in-memory on server load (takes less than 5ms for 250 gradient descent epochs). Given incoming tokens, it calculates a sigmoid score (0-100%) reflecting scam vocabulary resemblance.
 
-Verdict thresholds: `0–29` Low Risk · `30–64` Medium Risk · `65–100` High Risk.
+### Layer 3: LLM Synthesizer
+- **Model**: `gemini-3.6-flash`
+- **Execution**: The model receives the rules results and the ML classification score, and evaluates category details (Payment Request, Urgency, Domain, Language Quality, Realism) to build a unified report.
 
-## Setup
-
-```bash
-npm install
-cp .env.example .env.local   # then paste your Anthropic API key into .env.local
-npm run dev
+### Final Score Weighting
+The overall risk score is calculated as a weighted average:
+```typescript
+finalScore = (RuleScore * 0.2) + (MlScore * 0.2) + (LlmRiskScore * 0.6)
+```
+If the AI layer fails or is unconfigured, the app **degrades gracefully** to:
+```typescript
+finalScore = (RuleScore * 0.5) + (MlScore * 0.5)
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+---
 
-You need an Anthropic API key from [console.anthropic.com](https://console.anthropic.com/).
-The key is read server-side only (`process.env.ANTHROPIC_API_KEY` inside `lib/llm.ts`) and
-is never sent to or exposed in the browser. If it's missing or a request to Claude fails,
-the app still works using the rule-based score alone.
+## Setup & Local Development
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+2. **Create local environment file**:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Paste your Gemini API Key in `.env.local`:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+3. **Run local server**:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000).
+
+---
 
 ## Deploying to Vercel
 
-1. Push this repo to GitHub.
-2. Import it into Vercel.
-3. Add an environment variable `ANTHROPIC_API_KEY` in the Vercel project settings.
-4. Deploy — no other manual steps needed (`vercel.json` sets the Next.js build/install
-   commands explicitly).
+1. Push this repository to GitHub.
+2. Import the project into Vercel.
+3. Configure the environment variable **`GEMINI_API_KEY`** in the project settings.
+4. Deploy. Vercel automatically builds and deploys the Next.js routes.
 
-## Project structure
+---
+
+## Project Structure
 
 ```
 app/
-  api/analyze/route.ts   # POST endpoint: orchestrates rules -> LLM -> combined result
-  page.tsx                # main UI: form, results, session history
-  layout.tsx, globals.css
+  api/analyze/route.ts       # POST route: orchestrates Rule + ML + LLM pipeline
+  api/action/route.ts        # POST route: generates rejection drafts and reports
+  api/psychology/route.ts    # POST route: generates psychological tactic explainer
+  page.tsx                   # Main layout: navigation tabs, scanner panel, game deck
+  globals.css, layout.tsx
 components/
-  OfferForm.tsx            # input form (offer text + optional fields)
-  ResultsPanel.tsx          # score gauge + flags + AI explanation + recommendation
-  ScoreGauge.tsx            # circular risk-score gauge
-  FlagList.tsx               # numbered, severity-colored flag readout
-  ScanningState.tsx        # loading state
-  HistoryPanel.tsx          # session-only history (no persistence)
-  Header.tsx
+  OfferForm.tsx              # Split panel scanner: text paste / screenshot upload
+  ResultsPanel.tsx           # Forensic report dashboard
+  RadarChart.tsx             # Custom SVG Radar chart category visualizer
+  EvidenceHighlighter.tsx    # Inline review document with hover violation tooltips
+  ActionStation.tsx          # Rejection email and cyber report compiler
+  ScamGame.tsx               # Gamified card-swiping quiz simulator
+  ScanningState.tsx          # Scanning animation
+  HistoryPanel.tsx           # Session history panel
 lib/
-  rules.ts     # rule-based detector — the deterministic scam-pattern checks
-  llm.ts       # Claude API call + strict JSON parsing/validation
-  types.ts     # shared TypeScript types for the pipeline
+  rules.ts                   # Deterministic regex matching rules (Layer 1)
+  classifier.ts              # In-memory TF-IDF + Logistic Regression ML (Layer 2)
+  patternLibrary.ts          # 10 Scam patterns + Cosine Similarity matching
+  llm.ts                     # Gemini SDK structured output schema handler (Layer 3)
+  types.ts                   # Shared TypeScript definitions
 ```
 
-## Out of scope (by design, for this hackathon build)
-
-- No user accounts or authentication
-- No persistent database — history lives only in the browser session's React state
-- No multi-language support
+---
 
 ## Disclaimer
 
-ScamCheck is a decision aid, not a guarantee. It can miss novel scam patterns and can be
-wrong. Always verify independently — through a company's official careers page or a known
-HR contact — before paying money or sharing personal/financial information.
+ScamCheck is a decision aid, not a guarantee. It can miss novel scam patterns and can be wrong. Always verify independently through a company's official careers page or a known HR contact before paying money or sharing personal/financial information.

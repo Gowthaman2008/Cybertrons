@@ -44,15 +44,29 @@ export interface LlmAssessment {
   verdict: Verdict;
   explanation: string;
   additionalFlags: string[];
+  categoryScores: {
+    paymentRequestRisk: number; // 0-100
+    urgencyLanguage: number; // 0-100
+    domainLegitimacy: number; // 0-100
+    languageQuality: number; // 0-100
+    offerRealism: number; // 0-100
+  };
 }
 
 /** Final combined result sent to the frontend. */
 export interface AnalysisResult {
   ruleFlags: RuleFlag[];
   ruleScore: number; // 0-100, deterministic-only score
+  mlScore: number; // 0-100, Layer 2 ML classifier confidence
+  similarityMatch: {
+    patternName: string;
+    similarityScore: number; // 0-100
+    description: string;
+  } | null;
   llm: LlmAssessment | null;
-  /** True if the LLM call failed and we fell back to rule-based-only output. */
   llmUnavailable: boolean;
   finalScore: number; // what the UI treats as authoritative
   finalVerdict: Verdict;
+  caseId: string;
+  timestamp: number;
 }

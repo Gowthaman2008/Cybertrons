@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runRuleBasedChecks, computeRuleScore } from "@/lib/rules";
 import { getLlmAssessment } from "@/lib/llm";
+import { classifyText } from "@/lib/classifier";
+import { findClosestPattern } from "@/lib/patternLibrary";
 import { AnalysisResult, OfferInput, Verdict } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -53,15 +55,21 @@ export async function POST(req: NextRequest) {
     image: parsedImage,
   };
 
-  // Step 1: deterministic rule-based pass. Always succeeds, no network call.
+  // Step 1: deterministic rule-based pass (Layer 1).
   const ruleFlags = runRuleBasedChecks(input);
   const ruleScore = computeRuleScore(ruleFlags);
 
-  // Step 2: LLM pass. May fail (missing key, rate limit, network) — degrade gracefully.
+  // Layer 2: Lightweight ML classifier score (0-100)
+  const mlScore = Math.round(classifyText(offerText) * 100);
+
+  // Cosine Similarity Match against pattern library
+  const similarityMatch = findClosestPattern(offerText);
+
+  // Step 3: LLM pass (Layer 3).
   let llm = null;
   let llmUnavailable = false;
   try {
-    llm = await getLlmAssessment(input, ruleFlags);
+    llm = await getLlmAssessment(input, ruleFlags, mlScore);
   } catch (err) {
     llmUnavailable = true;
     console.error("LLM assessment failed, falling back to rule-based score:", err);
@@ -75,16 +83,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const finalScore = llm ? llm.riskScore : ruleScore;
-  const finalVerdict = llm ? llm.verdict : verdictFromScore(ruleScore);
+  // Combined weighted score calculation: 20% Rules + 20% ML + 60% LLM
+  const finalScore = llm
+    ? Math.round(ruleScore * 0.2 + mlScore * 0.2 + llm.riskScore * 0.6)
+    : Math.round(ruleScore * 0.5 + mlScore * 0.5);
+
+  const finalVerdict = verdictFromScore(finalScore);
+
+  const caseId = "SF-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
+  const timestamp = Date.now();
 
   const result: AnalysisResult = {
     ruleFlags,
     ruleScore,
+    mlScore,
+    similarityMatch,
     llm,
     llmUnavailable,
     finalScore,
     finalVerdict,
+    caseId,
+    timestamp,
   };
 
   return NextResponse.json(result);
