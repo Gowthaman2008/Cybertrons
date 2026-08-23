@@ -8,7 +8,7 @@ import ResultsPanel from "@/components/ResultsPanel";
 import ScanningState from "@/components/ScanningState";
 import HistoryPanel, { HistoryEntry } from "@/components/HistoryPanel";
 import ScamGame from "@/components/ScamGame";
-import { DarkGradientBg } from "@/components/ui/elegant-dark-pattern";
+import { CyberMatrixBg } from "@/components/ui/cyber-matrix-hero";
 import { CommitsGrid } from "@/components/ui/commits-grid";
 import { AnalysisResult, OfferInput } from "@/lib/types";
 
@@ -218,9 +218,9 @@ export default function Home() {
         Loading Scam Forensics Lab...
       </div>
     }>
-      <DarkGradientBg>
+      <CyberMatrixBg>
         <Dashboard />
-      </DarkGradientBg>
+      </CyberMatrixBg>
     </Suspense>
   );
 }
