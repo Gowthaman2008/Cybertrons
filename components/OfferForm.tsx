@@ -18,6 +18,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
   const [showOptional, setShowOptional] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isChatMode, setIsChatMode] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -71,16 +72,45 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
       onSubmit={handleSubmit}
       className="bg-base-surface border border-base-border rounded-lg p-5 sm:p-6"
     >
+      <div className="flex gap-2 p-1 bg-base-bg border border-base-border rounded-md mb-5 w-fit">
+        <button
+          type="button"
+          onClick={() => setIsChatMode(false)}
+          className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-all ${
+            !isChatMode
+              ? "bg-brand text-white shadow"
+              : "text-ink-muted hover:text-ink-primary"
+          }`}
+        >
+          🔍 Offer Letter / Email
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsChatMode(true)}
+          className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-all ${
+            isChatMode
+              ? "bg-brand text-white shadow"
+              : "text-ink-muted hover:text-ink-primary"
+          }`}
+        >
+          💬 Chat Log / WhatsApp
+        </button>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-5 mb-4">
         <div>
           <label htmlFor="offerText" className="block text-sm font-medium text-ink-primary mb-2">
-            Paste the offer message
+            {isChatMode ? "Paste the chat transcript" : "Paste the offer message"}
           </label>
           <textarea
             id="offerText"
             value={offerText}
             onChange={(e) => setOfferText(e.target.value)}
-            placeholder={`Paste the full internship or job offer message here — from WhatsApp, email, LinkedIn, wherever you received it.\n\nExample: "Dear Candidate, we are pleased to inform you of your selection..."`}
+            placeholder={
+              isChatMode
+                ? `Paste dialogue text from WhatsApp, Telegram, or SMS. E.g.\nRecruiter: "Hi, I have a remote typing job."\nMe: "Is there an interview?"\nRecruiter: "No interview needed, just pay RS 500 fee..."`
+                : `Paste the full internship or job offer message here — from WhatsApp, email, LinkedIn, wherever you received it.\n\nExample: "Dear Candidate, we are pleased to inform you of your selection..."`
+            }
             rows={8}
             maxLength={8000}
             className="w-full resize-none rounded-md bg-base-bg border border-base-border px-4 py-3 text-sm text-ink-primary placeholder:text-ink-faint focus:border-brand focus:ring-0 outline-none font-body leading-relaxed"

@@ -1,6 +1,7 @@
 import { AnalysisResult } from "@/lib/types";
 import ScoreGauge from "./ScoreGauge";
 import FlagList from "./FlagList";
+import ActionStation from "./ActionStation";
 
 function recommendationFor(finalScore: number): string {
   if (finalScore >= 65) {
@@ -12,7 +13,7 @@ function recommendationFor(finalScore: number): string {
   return "No major red flags found, but it's still good practice to verify the sender's email domain and confirm the role on the company's official careers page before proceeding.";
 }
 
-export default function ResultsPanel({ result }: { result: AnalysisResult }) {
+export default function ResultsPanel({ result, offerText }: { result: AnalysisResult; offerText: string }) {
   const { ruleFlags, llm, llmUnavailable, finalScore, finalVerdict } = result;
 
   return (
@@ -53,6 +54,10 @@ export default function ResultsPanel({ result }: { result: AnalysisResult }) {
             {recommendationFor(finalScore)}
           </p>
         </div>
+
+        {finalScore >= 30 && (
+          <ActionStation result={result} offerText={offerText} />
+        )}
       </div>
     </div>
   );
