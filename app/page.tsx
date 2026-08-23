@@ -291,7 +291,7 @@ function Dashboard() {
               <div className="max-w-3xl mx-auto">
                 <button
                   type="button"
-                  onClick={() => setView("input")}
+                  onClick={() => { setView("input"); setErrorMessage(null); }}
                   className="mb-6 inline-flex items-center gap-2 text-xs font-mono font-bold text-brand-bright hover:underline transition-all transform active:translate-x-[-2px]"
                 >
                   ← Back to Scanner
