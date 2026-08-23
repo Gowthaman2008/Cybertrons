@@ -190,6 +190,13 @@ function grammarQualityFlag(text: string): RuleFlag | null {
     "compnay",
     "salery",
     "aplicant",
+    "sftware",
+    "devloper",
+    "solutins",
+    "intervue",
+    "vaction",
+    "sallary",
+    "benifits"
   ];
   const foundMisspelling = misspellingList.find((w) =>
     new RegExp(`\\b${w}\\b`, "i").test(text)
@@ -356,6 +363,74 @@ export function runRuleBasedChecks(input: OfferInput): RuleFlag[] {
       severity: "high",
       evidence: railEvidence,
     });
+  }
+
+  // 11. Calendar date anomalies (e.g. "Septembre 43rd" or "Feb 35")
+  const dateDayMatch = text.match(/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{2,})(?:st|nd|rd|th)?\b/i);
+  if (dateDayMatch) {
+    const dayNum = parseInt(dateDayMatch[1], 10);
+    if (dayNum > 31) {
+      flags.push({
+        id: "impossible-date",
+        label: "Impossible calendar date",
+        explanation: `The offer lists an impossible date ("${dateDayMatch[0]}"), indicating an automated or forged template.`,
+        severity: "high",
+        evidence: dateDayMatch[0],
+      });
+    }
+  }
+
+  // 12. Contradictory salary period specifications (e.g. "$85,000 / month / year")
+  const salaryContradiction = text.match(/\b(?:\d{2,3},?\d{3})\s*\/?\s*month\s*\/?\s*year\b/i) || text.match(/\b(?:\d{2,3},?\d{3})\s*\/?\s*month\s*or\s*year\b/i);
+  if (salaryContradiction) {
+    flags.push({
+      id: "salary-contradiction",
+      label: "Conflicting pay periods",
+      explanation: `The salary details ("${salaryContradiction[0]}") list conflicting monthly and yearly terms.`,
+      severity: "medium",
+      evidence: salaryContradiction[0],
+    });
+  }
+
+  // 13. Contradictory job classification (e.g. "Full-Tiem / Sometime part-time")
+  const jobTypeContradiction = text.match(/full[- ]time\s*\/?\s*(?:some\s*times?\s*)?part[- ]time/i) || text.match(/full[- ]tiem\s*\/?\s*(?:some\s*times?\s*)?part[- ]time/i);
+  if (jobTypeContradiction) {
+    flags.push({
+      id: "job-type-contradiction",
+      label: "Conflicting job classification",
+      explanation: `The position specifier ("${jobTypeContradiction[0]}") claims to be full-time and part-time simultaneously.`,
+      severity: "medium",
+      evidence: jobTypeContradiction[0],
+    });
+  }
+
+  // 14. Email extraction and domain security check inside body text
+  const emailRegex = /[a-zA-Z0-9.-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  let emailMatch;
+  while ((emailMatch = emailRegex.exec(text)) !== null) {
+    const fullEmail = emailMatch[0];
+    const domain = emailMatch[1].toLowerCase();
+    
+    const isFreeDomain = FREE_EMAIL_DOMAINS.includes(domain);
+    const isSuspiciousTld = /\.(xyz|top|work|info|click|live|today|online|icu|bid|club)$/i.test(domain);
+    
+    if (isFreeDomain && !flags.some(f => f.id === "free-email-domain")) {
+      flags.push({
+        id: "free-email-domain",
+        label: "Recruits via free email provider",
+        explanation: `The email address mentioned in the text (${fullEmail}) uses a free consumer domain (${domain}).`,
+        severity: "medium",
+        evidence: fullEmail,
+      });
+    } else if (isSuspiciousTld && !flags.some(f => f.id === "suspicious-tld")) {
+      flags.push({
+        id: "suspicious-tld",
+        label: "Suspicious domain extension",
+        explanation: `The email address mentioned (${fullEmail}) uses a cheap top-level suffix (.${domain.split('.').pop()}) often associated with temporary fraud domains.`,
+        severity: "medium",
+        evidence: fullEmail,
+      });
+    }
   }
 
   return flags;
