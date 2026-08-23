@@ -185,23 +185,37 @@ export async function getLlmAssessment(
     text: buildUserMessage(input, ruleFlags, mlScore),
   });
 
-  const responsePromise = ai.models.generateContent({
-    model: MODEL,
-    contents,
-    config: {
-      systemInstruction: buildSystemInstruction() + "\nYou MUST return a JSON object with properties: riskScore (integer 0-100), verdict (string), explanation (string), additionalFlags (string array), and categoryScores (object containing keys paymentRequestRisk, urgencyLanguage, domainLegitimacy, languageQuality, offerRealism). Output ONLY valid raw JSON.",
-      responseMimeType: "application/json",
-    },
-  });
-
   const isImage = !!input.image;
-  const timeoutMs = isImage ? 15000 : 5500; // 15 seconds for images, 5.5 seconds for text
+  const timeoutMs = isImage ? 30000 : 20000; // 30 seconds for images, 20 seconds for text
 
-  const response = await withTimeout(
-    responsePromise,
-    timeoutMs,
-    `Gemini API call timed out after ${timeoutMs / 1000} seconds`
-  );
+  async function makeCall() {
+    return ai.models.generateContent({
+      model: MODEL,
+      contents,
+      config: {
+        systemInstruction: buildSystemInstruction() + "\nYou MUST return a JSON object with properties: riskScore (integer 0-100), verdict (string), explanation (string), additionalFlags (string array), and categoryScores (object containing keys paymentRequestRisk, urgencyLanguage, domainLegitimacy, languageQuality, offerRealism). Output ONLY valid raw JSON.",
+        responseMimeType: "application/json",
+      },
+    });
+  }
+
+  let response: any;
+  try {
+    response = await withTimeout(
+      makeCall(),
+      timeoutMs,
+      `Gemini API call timed out after ${timeoutMs / 1000} seconds`
+    );
+  } catch (err: any) {
+    // If first attempt timed out or hit temporary rate limit, wait 1.5s and retry once
+    console.warn("First Gemini attempt failed/timed out, retrying once...", err?.message || err);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    response = await withTimeout(
+      makeCall(),
+      timeoutMs,
+      `Gemini API retry timed out after ${timeoutMs / 1000} seconds`
+    );
+  }
 
   const rawText = response.text;
   if (!rawText) {
