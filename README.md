@@ -33,7 +33,10 @@
 
 - **Framework**: Next.js 14 (App Router, TypeScript)
 - **UI**: React + Tailwind CSS
-- **AI Backend**: Google Gen AI SDK (`@google/genai`) querying `gemini-3.6-flash`
+- **AI Inference Backends**:
+  - **Groq AI (Ultra-fast)**: Llama 3.3 70B (~500 tokens/sec, high rate limits)
+  - **Google Gemini**: `gemini-2.5-flash` / Multimodal image analysis
+- **OCR Engine**: Tesseract.js client-side OCR for real-time document extraction
 - **Deployment**: Vercel
 
 ---

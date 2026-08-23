@@ -104,73 +104,96 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMsg: string
 }
 
 /**
- * Call Gemini to get the LLM assessment. Throws on any failure so the caller
- * (the API route) can decide how to gracefully degrade to rule-based-only.
+ * Query Groq AI (Llama 3.3 70B) for high-speed, high-rate-limit forensic evaluation.
+ */
+async function getGroqAssessment(
+  apiKey: string,
+  input: OfferInput,
+  ruleFlags: RuleFlag[],
+  mlScore: number
+): Promise<LlmAssessment> {
+  const systemPrompt = buildSystemInstruction() + `\nYou MUST return a JSON object with the exact keys: riskScore (integer 0-100), verdict ("Low Risk" | "Medium Risk" | "High Risk"), explanation (string), additionalFlags (string array), and categoryScores (object with paymentRequestRisk, urgencyLanguage, domainLegitimacy, languageQuality, offerRealism). Output ONLY valid raw JSON.`;
+
+  const userMessage = buildUserMessage(input, ruleFlags, mlScore);
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const rawText = data.choices?.[0]?.message?.content;
+  if (!rawText) {
+    throw new Error("Groq response contained no content.");
+  }
+
+  const parsed = JSON.parse(rawText);
+  const riskScore = clampScore(parsed.riskScore);
+  const verdict = coerceVerdict(parsed.verdict, riskScore);
+  const explanation =
+    typeof parsed.explanation === "string" && parsed.explanation.trim().length > 0
+      ? parsed.explanation.trim()
+      : "The model did not return an explanation.";
+  const additionalFlags = Array.isArray(parsed.additionalFlags)
+    ? parsed.additionalFlags.filter((f: unknown): f is string => typeof f === "string")
+    : [];
+
+  const categoryScores = {
+    paymentRequestRisk: clampScore(parsed.categoryScores?.paymentRequestRisk),
+    urgencyLanguage: clampScore(parsed.categoryScores?.urgencyLanguage),
+    domainLegitimacy: clampScore(parsed.categoryScores?.domainLegitimacy),
+    languageQuality: clampScore(parsed.categoryScores?.languageQuality),
+    offerRealism: clampScore(parsed.categoryScores?.offerRealism),
+  };
+
+  return { riskScore, verdict, explanation, additionalFlags, categoryScores };
+}
+
+/**
+ * Call Groq (preferred) or Gemini to get the LLM assessment.
+ * Throws on any failure so the caller (the API route) can decide how to gracefully degrade.
  */
 export async function getLlmAssessment(
   input: OfferInput,
   ruleFlags: RuleFlag[],
   mlScore: number
 ): Promise<LlmAssessment> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured on the server.");
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  // 1. Try Groq AI (Llama 3.3 70B) first if key is configured
+  if (groqApiKey && groqApiKey.trim().length > 0) {
+    try {
+      console.log("Evaluating risk using Groq AI (Llama 3.3 70B)...");
+      return await getGroqAssessment(groqApiKey.trim(), input, ruleFlags, mlScore);
+    } catch (groqErr) {
+      console.warn("Groq AI evaluation failed, attempting Gemini fallback:", groqErr);
+    }
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // 2. Fall back to Gemini if configured
+  if (!geminiApiKey) {
+    throw new Error("Neither GROQ_API_KEY nor GEMINI_API_KEY is configured.");
+  }
 
-  const responseSchema = {
-    type: Type.OBJECT,
-    properties: {
-      riskScore: {
-        type: Type.INTEGER,
-        description: "An integer 0-100, 0 = clearly legitimate, 100 = almost certainly a scam.",
-      },
-      verdict: {
-        type: Type.STRING,
-        enum: ["Low Risk", "Medium Risk", "High Risk"],
-        description: "The risk verdict mapping: Low Risk (0-29), Medium Risk (30-64), High Risk (65-100).",
-      },
-      explanation: {
-        type: Type.STRING,
-        description: "2-4 sentences, plain English, addressed directly to the student, explaining the overall assessment, synthesizing the rule-based flags (Layer 1) and the ML score (Layer 2) into a cohesive warning.",
-      },
-      additionalFlags: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.STRING,
-        },
-        description: "Short strings for any NEW concerns you noticed that were NOT in the provided rule flags list; empty array if none.",
-      },
-      categoryScores: {
-        type: Type.OBJECT,
-        properties: {
-          paymentRequestRisk: {
-            type: Type.INTEGER,
-            description: "Risk score (0-100) based on upfront fees, payments requested, or sensitive banking details.",
-          },
-          urgencyLanguage: {
-            type: Type.INTEGER,
-            description: "Risk score (0-100) based on pressure tactics, quick response times, or slot limitations.",
-          },
-          domainLegitimacy: {
-            type: Type.INTEGER,
-            description: "Risk score (0-100) based on domain discrepancies or consumer email handles.",
-          },
-          languageQuality: {
-            type: Type.INTEGER,
-            description: "Risk score (0-100) based on typos, casing abnormalities, or structural grammar flaws.",
-          },
-          offerRealism: {
-            type: Type.INTEGER,
-            description: "Risk score (0-100) based on role tasks vs compensation mismatch.",
-          },
-        },
-        required: ["paymentRequestRisk", "urgencyLanguage", "domainLegitimacy", "languageQuality", "offerRealism"],
-      },
-    },
-    required: ["riskScore", "verdict", "explanation", "additionalFlags", "categoryScores"],
-  };
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
   const contents: any[] = [];
   if (input.image) {
@@ -207,7 +230,6 @@ export async function getLlmAssessment(
       `Gemini API call timed out after ${timeoutMs / 1000} seconds`
     );
   } catch (err: any) {
-    // If first attempt timed out or hit temporary rate limit, wait 1.5s and retry once
     console.warn("First Gemini attempt failed/timed out, retrying once...", err?.message || err);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     response = await withTimeout(

@@ -1,10 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
+async function generateWithGroq(apiKey: string, prompt: string): Promise<string> {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: "You are a professional assistant helping students with cybersecurity safety and professional communications." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.3,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Empty response from Groq.");
+  return text;
+}
+
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "Gemini API Key is not configured." }, { status: 503 });
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (!groqApiKey && !geminiApiKey) {
+    return NextResponse.json({ error: "AI API Key is not configured." }, { status: 503 });
   }
 
   let body: any;
@@ -19,8 +49,6 @@ export async function POST(req: NextRequest) {
   if (actionType !== "rejection" && actionType !== "report") {
     return NextResponse.json({ error: "Invalid actionType." }, { status: 400 });
   }
-
-  const ai = new GoogleGenAI({ apiKey });
 
   let prompt = "";
   if (actionType === "rejection") {
@@ -54,20 +82,33 @@ Write a structured, formal incident report (email format) that includes:
 Make it look highly professional and formal. Use "Gowthaman P R" as the reporting student name.`;
   }
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: prompt,
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("Empty response from model.");
+  // 1. Try Groq AI first
+  if (groqApiKey && groqApiKey.trim().length > 0) {
+    try {
+      const draft = await generateWithGroq(groqApiKey.trim(), prompt);
+      return NextResponse.json({ draft });
+    } catch (groqErr) {
+      console.warn("Groq draft generation failed, trying Gemini fallback:", groqErr);
     }
-
-    return NextResponse.json({ draft: text });
-  } catch (err: any) {
-    console.error("Draft generation failed:", err);
-    return NextResponse.json({ error: "Failed to generate draft." }, { status: 500 });
   }
+
+  // 2. Fall back to Gemini
+  if (geminiApiKey) {
+    try {
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      const text = response.text;
+      if (text) {
+        return NextResponse.json({ draft: text });
+      }
+    } catch (geminiErr) {
+      console.error("Gemini draft generation failed:", geminiErr);
+    }
+  }
+
+  return NextResponse.json({ error: "Failed to generate draft." }, { status: 500 });
 }

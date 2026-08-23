@@ -1,10 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
+async function analyzeWithGroq(apiKey: string, prompt: string): Promise<string> {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: "You are a forensic psychologist and cybersecurity awareness advisor." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.3,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Empty response from Groq.");
+  return text;
+}
+
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "Gemini API Key is not configured." }, { status: 503 });
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (!groqApiKey && !geminiApiKey) {
+    return NextResponse.json({ error: "AI API Key is not configured." }, { status: 503 });
   }
 
   let body: any;
@@ -15,8 +45,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { offerText, companyName, verdict, riskScore } = body;
-
-  const ai = new GoogleGenAI({ apiKey });
 
   const prompt = `You are a forensic psychologist and cybersecurity awareness advisor. Analyze the following job/internship offer letter (or conversational transcript) to explain the social engineering and psychological manipulation tactics being utilized by the sender.
 The offer text is:
@@ -32,20 +60,33 @@ Identify which of these psychological triggers are active in the message, and wr
 
 Provide a final short key takeaway on how the student can counter these psychological traps (e.g., verify independently, consult university advisers).`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
-      contents: prompt,
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("Empty response from model.");
+  // 1. Try Groq AI first
+  if (groqApiKey && groqApiKey.trim().length > 0) {
+    try {
+      const psychology = await analyzeWithGroq(groqApiKey.trim(), prompt);
+      return NextResponse.json({ psychology });
+    } catch (groqErr) {
+      console.warn("Groq psychology analysis failed, trying Gemini fallback:", groqErr);
     }
-
-    return NextResponse.json({ psychology: text });
-  } catch (err: any) {
-    console.error("Psychology explanation failed:", err);
-    return NextResponse.json({ error: "Failed to generate psychology analysis." }, { status: 500 });
   }
+
+  // 2. Fall back to Gemini
+  if (geminiApiKey) {
+    try {
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      const text = response.text;
+      if (text) {
+        return NextResponse.json({ psychology: text });
+      }
+    } catch (geminiErr) {
+      console.error("Gemini psychology analysis failed:", geminiErr);
+    }
+  }
+
+  return NextResponse.json({ error: "Failed to generate psychology analysis." }, { status: 500 });
 }
