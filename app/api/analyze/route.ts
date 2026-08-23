@@ -65,6 +65,14 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     llmUnavailable = true;
     console.error("LLM assessment failed, falling back to rule-based score:", err);
+    if (!offerText) {
+      return NextResponse.json(
+        {
+          error: "The AI assessment service is currently unavailable. Since you uploaded an image-only request, we cannot perform the scan. Please paste the offer text instead to run a rule-based check.",
+        },
+        { status: 503 }
+      );
+    }
   }
 
   const finalScore = llm ? llm.riskScore : ruleScore;

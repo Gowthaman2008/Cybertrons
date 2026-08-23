@@ -17,7 +17,7 @@ export default function Header() {
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-ink-muted">
           <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block" />
-          rule engine + claude
+          rule engine + gemini
         </div>
       </div>
     </header>
