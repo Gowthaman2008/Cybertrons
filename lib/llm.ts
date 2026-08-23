@@ -194,10 +194,13 @@ export async function getLlmAssessment(
     },
   });
 
+  const isImage = !!input.image;
+  const timeoutMs = isImage ? 15000 : 5500; // 15 seconds for images, 5.5 seconds for text
+
   const response = await withTimeout(
     responsePromise,
-    5500,
-    "Gemini API call timed out after 5.5 seconds"
+    timeoutMs,
+    `Gemini API call timed out after ${timeoutMs / 1000} seconds`
   );
 
   const rawText = response.text;
