@@ -62,7 +62,15 @@ export default function Header() {
               <div className="flex gap-2">
                 <span className="text-brand-bright font-bold font-mono">1.</span>
                 <p>
-                  Locate the <code className="bg-base-raised px-1.5 py-0.5 rounded border border-base-border text-ink-primary font-mono text-[10px]">/extension</code> directory in the project files.
+                  Download the{" "}
+                  <a
+                    href="/scamcheck-extension.zip"
+                    download
+                    className="text-brand-bright font-bold hover:underline"
+                  >
+                    🔌 ScamCheck Extension Zip
+                  </a>{" "}
+                  and extract/unzip it on your computer.
                 </p>
               </div>
               <div className="flex gap-2">
