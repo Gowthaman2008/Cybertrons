@@ -170,16 +170,18 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setShowOptional((v) => !v)}
-        className="text-xs font-mono text-brand-bright hover:text-brand-bright/80 font-bold mb-5 inline-flex items-center gap-1.5 transition-colors"
-      >
-        {showOptional ? "− hide" : "+ add"} optional details (improves accuracy)
-      </button>
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={() => setShowOptional((v) => !v)}
+          className="text-xs font-display text-brand-bright hover:text-brand-bright/80 font-bold inline-flex items-center gap-1.5 transition-colors"
+        >
+          {showOptional ? "− hide" : "+ add"} optional details (improves accuracy)
+        </button>
+      </div>
 
       {showOptional && (
-        <div className="grid sm:grid-cols-2 gap-4 mb-5 animate-fade-in">
+        <div className="grid sm:grid-cols-2 gap-4 mb-6 animate-fade-in">
           <Field
             label="Sender email"
             value={senderEmail}
@@ -208,25 +210,27 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
       )}
 
       {errorMessage && (
-        <div className="mb-4 rounded-lg border border-risk-high/30 bg-risk-highDim/50 px-4 py-3 text-sm text-ink-primary animate-fade-in font-sans">
+        <div className="mb-6 rounded-lg border border-risk-high/30 bg-risk-highDim/50 px-4 py-3 text-sm text-ink-primary animate-fade-in font-sans">
           {errorMessage}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={(!offerText.trim() && !imagePreview) || isLoading}
-        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-brand hover:bg-brand-bright disabled:bg-base-raised disabled:text-ink-faint disabled:cursor-not-allowed text-white font-semibold text-xs font-mono tracking-wide uppercase px-6 py-3.5 transition-all duration-200 transform active:scale-95 shadow-md shadow-brand/15 hover:shadow-lg hover:shadow-brand/25"
-      >
-        {isLoading ? (
-          <>
-            <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-            Analyzing…
-          </>
-        ) : (
-          "Run scam check"
-        )}
-      </button>
+      <div className="pt-5 border-t border-base-border/30 flex justify-end">
+        <button
+          type="submit"
+          disabled={(!offerText.trim() && !imagePreview) || isLoading}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-brand hover:bg-brand-bright disabled:bg-base-raised disabled:text-ink-faint disabled:cursor-not-allowed text-black font-bold text-xs font-display tracking-wider uppercase px-6 py-3.5 transition-all duration-200 transform active:scale-95 shadow-md shadow-brand/15 hover:shadow-lg hover:shadow-brand/25"
+        >
+          {isLoading ? (
+            <>
+              <span className="w-3.5 h-3.5 rounded-full border-2 border-black/40 border-t-black animate-spin" />
+              Analyzing…
+            </>
+          ) : (
+            "Run scam check"
+          )}
+        </button>
+      </div>
     </form>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnalysisResult } from "@/lib/types";
 import ScoreGauge from "./ScoreGauge";
 import EvidenceHighlighter from "./EvidenceHighlighter";
@@ -59,15 +59,22 @@ export default function ResultsPanel({ result, offerText }: { result: AnalysisRe
     }
   }
 
-  // Formatting case timestamp
-  const dateStr = new Date(timestamp).toLocaleString("en-US", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  });
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Formatting case timestamp (preventing client-server timezone hydration mismatch)
+  const dateStr = mounted
+    ? new Date(timestamp).toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      })
+    : "";
 
   return (
     <div className="bg-base-surface border border-base-border rounded-lg overflow-hidden animate-fade-in space-y-6 pb-6 shadow-xl">

@@ -130,7 +130,7 @@ function Dashboard() {
         </p>
       </div>
 
-      <Header showModal={showModal} setShowModal={setShowModal} onLogoClick={() => setView("landing")} />
+      <Header showModal={showModal} setShowModal={setShowModal} onLogoClick={() => { setView("landing"); setActiveTab("scan"); }} />
 
       <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-8">
         {/* Navigation Tabs */}
@@ -164,99 +164,99 @@ function Dashboard() {
           </div>
         )}
 
-        {activeTab === "scan" ? (
+          {view === "landing" ? (
+          // Landing Page: Full details about ScamCheck
+          <div className="max-w-4xl mx-auto space-y-12 py-4 animate-fade-in">
+            {/* Hero section */}
+            <div className="relative text-center space-y-6 max-w-2xl mx-auto py-8 rounded-2xl overflow-hidden border border-base-border/30 bg-base-surface/20 backdrop-blur-[2px]">
+              <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+                <SparklesCore
+                  id="landing-sparkles"
+                  background="transparent"
+                  minSize={0.6}
+                  maxSize={1.6}
+                  particleDensity={100}
+                  className="w-full h-full"
+                  particleColor="#00FF66"
+                  speed={0.4}
+                />
+              </div>
+              
+              <div className="relative z-10 space-y-6 flex flex-col items-center px-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-[10px] font-mono font-bold text-brand-bright uppercase tracking-wider">
+                  🛡️ Multi-Layer Security Forensic Lab
+                </span>
+                <h2 className="font-display font-bold text-4xl sm:text-6xl tracking-tight text-ink-primary leading-[1.1]">
+                  Verify Offers. <span className="text-brand-bright">Detect Scams.</span>
+                </h2>
+                <p className="text-sm sm:text-base text-ink-muted leading-relaxed max-w-xl">
+                  Protect yourself from fake job templates, spoofed corporate identities, and recruitment scams. ScamCheck runs real-time rule parsing, template similarity matching, and advanced social engineering analysis before you share personal data.
+                </p>
+                
+                {/* Two Main Call-To-Action buttons in front */}
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setView("input")}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-brand hover:bg-brand-bright text-black font-bold font-mono text-xs tracking-wider uppercase rounded-lg shadow-[0_0_15px_rgba(0,255,102,0.25)] hover:shadow-[0_0_20px_rgba(0,255,102,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
+                  >
+                    🔍 Check Scam Risk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(true)}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-base-raised hover:bg-base-raised/80 border border-base-border text-brand-bright font-bold font-mono text-xs tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
+                  >
+                    🔌 Add Extension
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Features Matrix Grid */}
+            <div className="grid md:grid-cols-3 gap-6 pt-6">
+              <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
+                  ⚡
+                </div>
+                <h3 className="font-display font-semibold text-base text-ink-primary">1. Rule Engine</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Instant scanning for high-frequency hiring scams, fake domains, verification deposits, and suspicious messaging handle prompts.
+                </p>
+              </div>
+
+              <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
+                  🧠
+                </div>
+                <h3 className="font-display font-semibold text-base text-ink-primary">2. ML Classifier</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Natural language vector similarity scoring that screens incoming texts against templates extracted from real-world scam configurations.
+                </p>
+              </div>
+
+              <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
+                  🤖
+                </div>
+                <h3 className="font-display font-semibold text-base text-ink-primary">3. Gemini Forensics</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Social engineering analysis mapping gaslighting tactics, fake urgency, and pressure hooks, providing a clear explanation of what is off.
+                </p>
+              </div>
+            </div>
+
+            {/* Landing page footer */}
+            <div className="border-t border-base-border/40 pt-8 mt-12 text-center text-[10px] sm:text-xs font-body tracking-[0.15em] text-white/45 uppercase select-none">
+              powered by <span className="font-semibold text-white/85">Cybertrons</span>
+            </div>
+          </div>
+        ) : activeTab === "scan" ? (
           <div>
             {isLoading ? (
               // Loading State occupies the view during scan
               <div className="max-w-2xl mx-auto py-12">
                 <ScanningState />
-              </div>
-            ) : view === "landing" ? (
-              // Landing Page: Full details about ScamCheck
-              <div className="max-w-4xl mx-auto space-y-12 py-4 animate-fade-in">
-                {/* Hero section */}
-                <div className="relative text-center space-y-6 max-w-2xl mx-auto py-8 rounded-2xl overflow-hidden border border-base-border/30 bg-base-surface/20 backdrop-blur-[2px]">
-                  <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-                    <SparklesCore
-                      id="landing-sparkles"
-                      background="transparent"
-                      minSize={0.6}
-                      maxSize={1.6}
-                      particleDensity={100}
-                      className="w-full h-full"
-                      particleColor="#00FF66"
-                      speed={0.4}
-                    />
-                  </div>
-                  
-                  <div className="relative z-10 space-y-6 flex flex-col items-center px-6">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-[10px] font-mono font-bold text-brand-bright uppercase tracking-wider">
-                      🛡️ Multi-Layer Security Forensic Lab
-                    </span>
-                    <h2 className="font-display font-bold text-4xl sm:text-6xl tracking-tight text-ink-primary leading-[1.1]">
-                      Verify Offers. <span className="text-brand-bright">Detect Scams.</span>
-                    </h2>
-                    <p className="text-sm sm:text-base text-ink-muted leading-relaxed max-w-xl">
-                      Protect yourself from fake job templates, spoofed corporate identities, and recruitment scams. ScamCheck runs real-time rule parsing, template similarity matching, and advanced social engineering analysis before you share personal data.
-                    </p>
-                    
-                    {/* Two Main Call-To-Action buttons in front */}
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2 w-full sm:w-auto">
-                      <button
-                        type="button"
-                        onClick={() => setView("input")}
-                        className="w-full sm:w-auto px-6 py-3.5 bg-brand hover:bg-brand-bright text-black font-bold font-mono text-xs tracking-wider uppercase rounded-lg shadow-[0_0_15px_rgba(0,255,102,0.25)] hover:shadow-[0_0_20px_rgba(0,255,102,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
-                      >
-                        🔍 Check Scam Risk
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowModal(true)}
-                        className="w-full sm:w-auto px-6 py-3.5 bg-base-raised hover:bg-base-raised/80 border border-base-border text-brand-bright font-bold font-mono text-xs tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
-                      >
-                        🔌 Add Extension
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Features Matrix Grid */}
-                <div className="grid md:grid-cols-3 gap-6 pt-6">
-                  <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
-                      ⚙️
-                    </div>
-                    <h3 className="font-display font-semibold text-base text-ink-primary">1. Rule-Based Flags</h3>
-                    <p className="text-xs text-ink-muted leading-relaxed">
-                      Instant matching on urgent call-to-actions, unverified domains, registration fee demands, and Telegram/WhatsApp recruitment redirects.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
-                      🧠
-                    </div>
-                    <h3 className="font-display font-semibold text-base text-ink-primary">2. ML Classifier</h3>
-                    <p className="text-xs text-ink-muted leading-relaxed">
-                      Natural language vector similarity scoring that screens incoming texts against templates extracted from real-world scam configurations.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-surface border border-base-border p-6 rounded-xl space-y-3 hover:border-brand/40 transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand-bright text-lg">
-                      🤖
-                    </div>
-                    <h3 className="font-display font-semibold text-base text-ink-primary">3. Gemini Forensics</h3>
-                    <p className="text-xs text-ink-muted leading-relaxed">
-                      Social engineering analysis mapping gaslighting tactics, fake urgency, and pressure hooks, providing a clear explanation of what is off.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Landing page footer */}
-                <div className="border-t border-base-border/40 pt-8 mt-12 text-center text-[10px] sm:text-xs font-body tracking-[0.15em] text-white/45 uppercase select-none">
-                  powered by <span className="font-semibold text-white/85">Cybertrons</span>
-                </div>
               </div>
             ) : view === "input" ? (
               // View 1: Paste details and upload documents
@@ -264,7 +264,7 @@ function Dashboard() {
                 <div className="mb-4">
                   <button
                     type="button"
-                    onClick={() => setView("landing")}
+                    onClick={() => { setView("landing"); setActiveTab("scan"); }}
                     className="mb-4 inline-flex items-center gap-2 text-xs font-mono font-bold text-brand-bright hover:underline transition-all"
                   >
                     ← Back to Home
@@ -305,7 +305,10 @@ function Dashboard() {
           <div className="py-2">
             <button
               type="button"
-              onClick={() => setView("landing")}
+              onClick={() => {
+                setView("landing");
+                setActiveTab("scan");
+              }}
               className="mb-6 inline-flex items-center gap-2 text-xs font-mono font-bold text-brand-bright hover:underline transition-all"
             >
               ← Back to Home

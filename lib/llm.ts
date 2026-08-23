@@ -89,6 +89,21 @@ function coerceVerdict(v: unknown, score: number): Verdict {
 }
 
 /**
+ * Race a promise against a timeout.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMsg: string): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(errorMsg));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
+}
+
+/**
  * Call Gemini to get the LLM assessment. Throws on any failure so the caller
  * (the API route) can decide how to gracefully degrade to rule-based-only.
  */
@@ -170,15 +185,20 @@ export async function getLlmAssessment(
     text: buildUserMessage(input, ruleFlags, mlScore),
   });
 
-  const response = await ai.models.generateContent({
+  const responsePromise = ai.models.generateContent({
     model: MODEL,
     contents,
     config: {
-      systemInstruction: buildSystemInstruction(),
+      systemInstruction: buildSystemInstruction() + "\nYou MUST return a JSON object with properties: riskScore (integer 0-100), verdict (string), explanation (string), additionalFlags (string array), and categoryScores (object containing keys paymentRequestRisk, urgencyLanguage, domainLegitimacy, languageQuality, offerRealism). Output ONLY valid raw JSON.",
       responseMimeType: "application/json",
-      responseJsonSchema: responseSchema,
     },
   });
+
+  const response = await withTimeout(
+    responsePromise,
+    5500,
+    "Gemini API call timed out after 5.5 seconds"
+  );
 
   const rawText = response.text;
   if (!rawText) {

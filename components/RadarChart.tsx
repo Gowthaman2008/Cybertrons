@@ -23,8 +23,8 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
     { label: "Offer Realism", key: "offerRealism" as const }
   ];
 
-  const cx = 150;
-  const cy = 135;
+  const cx = 180;
+  const cy = 140;
   const r = 80;
   const numSides = 5;
 
@@ -89,12 +89,12 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 bg-base-bg rounded border border-base-border w-full max-w-[340px] mx-auto select-none">
+    <div className="flex flex-col items-center justify-center p-3 bg-base-bg rounded border border-base-border w-full max-w-[400px] mx-auto select-none">
       <h4 className="text-[10px] font-mono uppercase text-ink-faint tracking-wider mb-2">
         Forensic Category Breakdown
       </h4>
 
-      <svg width="300" height="255" className="overflow-visible">
+      <svg width="360" height="270" className="overflow-visible">
         {/* Concentric Grids */}
         {gridPolygons.map((points, idx) => (
           <polygon

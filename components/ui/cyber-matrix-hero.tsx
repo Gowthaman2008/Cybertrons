@@ -110,7 +110,7 @@ const CyberMatrixHero = () => {
             {/* Animated Grid Background */}
             <div ref={gridRef} id="tiles"></div>
             
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 #tiles {
                     --intensity: 0;
                     display: grid;
@@ -146,7 +146,7 @@ const CyberMatrixHero = () => {
                     50% { transform: scale(1.2); color: #fff; text-shadow: 0 0 10px #fff; }
                     100% { transform: scale(1); color: #0f0; }
                 }
-            `}</style>
+            ` }} />
 
             {/* Overlay HTML Content */}
             <div className="relative z-10 text-center p-6 bg-black/60 backdrop-blur-md rounded-xl border border-white/10">
@@ -281,7 +281,7 @@ export const CyberMatrixBg = ({ children }: { children?: React.ReactNode }) => {
         <div className="relative min-h-screen w-full bg-black overflow-hidden">
             <div ref={gridRef} id="tiles-bg" className="fixed inset-0 pointer-events-none opacity-30 z-0"></div>
             
-            <style>{`
+            <style dangerouslySetInnerHTML={{ __html: `
                 #tiles-bg {
                     --intensity: 0;
                     display: grid;
@@ -303,7 +303,7 @@ export const CyberMatrixBg = ({ children }: { children?: React.ReactNode }) => {
                     transform: scale(calc(1 + var(--intensity) * 0.2));
                     transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
                 }
-            `}</style>
+            ` }} />
             
             <div className="relative z-10">{children}</div>
         </div>
