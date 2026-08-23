@@ -193,14 +193,21 @@ function Dashboard() {
                   Protect yourself from fake job templates, spoofed corporate identities, and recruitment scams. ScamCheck runs real-time rule parsing, template similarity matching, and advanced social engineering analysis before you share personal data.
                 </p>
                 
-                {/* Main Call-To-Action button in front */}
-                <div className="flex justify-center items-center pt-2 w-full sm:w-auto">
+                {/* Two Main Call-To-Action buttons in front */}
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={() => setView("input")}
                     className="w-full sm:w-auto px-6 py-3.5 bg-brand hover:bg-brand-bright text-black font-bold font-mono text-xs tracking-wider uppercase rounded-lg shadow-[0_0_15px_rgba(0,255,102,0.25)] hover:shadow-[0_0_20px_rgba(0,255,102,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
                   >
                     🔍 Check Scam Risk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(true)}
+                    className="w-full sm:w-auto px-6 py-3.5 bg-base-raised hover:bg-base-raised/80 border border-base-border text-brand-bright font-bold font-mono text-xs tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
+                  >
+                    🔌 Add Extension
                   </button>
                 </div>
               </div>
