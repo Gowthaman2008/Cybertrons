@@ -7,15 +7,15 @@
       width: 320px;
       margin: 0;
       padding: 12px;
-      background-color: #121821;
-      color: #E7ECF2;
+      background-color: #000000;
+      color: #E0EBE0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       box-sizing: border-box;
     }
     .header-logo {
       font-size: 11px;
       font-weight: bold;
-      color: #00E6FF;
+      color: #00FF66;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: 2px;
@@ -25,17 +25,17 @@
       font-size: 15px;
       font-weight: 600;
       margin: 0 0 12px 0;
-      color: #FFFFFF;
-      border-bottom: 1px solid #1D2633;
+      color: #E0EBE0;
+      border-bottom: 1px solid #1F331F;
       padding-bottom: 8px;
     }
     textarea {
       width: 100%;
       height: 90px;
-      background-color: #1D2633;
-      border: 1px solid #2A3542;
+      background-color: #080C08;
+      border: 1px solid #1F331F;
       border-radius: 4px;
-      color: #E7ECF2;
+      color: #E0EBE0;
       font-size: 11px;
       padding: 8px;
       resize: none;
@@ -43,13 +43,13 @@
       outline: none;
     }
     textarea:focus {
-      border-color: #00E6FF;
+      border-color: #00FF66;
     }
     .btn {
       display: block;
       width: 100%;
-      background: #00E6FF;
-      color: #121821;
+      background: #00FF66;
+      color: #000000;
       border: none;
       padding: 8px;
       font-size: 11px;
@@ -62,17 +62,17 @@
       box-sizing: border-box;
     }
     .btn:hover {
-      background: #00B3CC;
+      background: #39FF14;
     }
     .btn:disabled {
-      background: #2A3542;
-      color: #708090;
+      background: #121A12;
+      color: #526652;
       cursor: not-allowed;
     }
     .result-panel {
       margin-top: 12px;
-      background: #1D2633;
-      border: 1px solid #2A3542;
+      background: #080C08;
+      border: 1px solid #1F331F;
       border-radius: 6px;
       padding: 10px;
       display: none;
@@ -94,14 +94,14 @@
     .explanation {
       font-size: 10px;
       line-height: 1.4;
-      color: #9AA5B5;
+      color: #99B399;
       margin-bottom: 8px;
     }
     .report-link {
       display: block;
       text-align: center;
       font-size: 10px;
-      color: #00E6FF;
+      color: #00FF66;
       text-decoration: none;
       margin-top: 8px;
       font-weight: 500;
@@ -111,21 +111,21 @@
     }
     .history-section {
       margin-top: 14px;
-      border-top: 1px solid #1D2633;
+      border-top: 1px solid #1F331F;
       padding-top: 10px;
     }
     .history-title {
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #708090;
+      color: #526652;
       margin-bottom: 6px;
       font-weight: bold;
     }
     .history-item {
       font-size: 10px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid #1D2633;
+      background: rgba(0, 255, 102, 0.02);
+      border: 1px solid #1F331F;
       border-radius: 4px;
       padding: 6px 8px;
       margin-bottom: 4px;
@@ -136,13 +136,13 @@
       gap: 6px;
     }
     .history-item:hover {
-      border-color: #2A3542;
-      background: rgba(255, 255, 255, 0.04);
+      border-color: #00FF66;
+      background: rgba(0, 255, 102, 0.06);
     }
     .loader {
       display: none;
       font-size: 11px;
-      color: #00E6FF;
+      color: #00FF66;
       text-align: center;
       margin-top: 8px;
     }
@@ -161,11 +161,11 @@
   <textarea id="scan-text" placeholder="Paste the suspicious job/internship offer message or conversation transcript here..."></textarea>
   
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
-    <button id="screenshot-btn" class="btn" style="margin-top: 0; background: #1D2633; border: 1px solid #2A3542; color: #FFFFFF;">📸 Scan Screen</button>
-    <button id="page-btn" class="btn" style="margin-top: 0; background: #1D2633; border: 1px solid #2A3542; color: #FFFFFF;">📄 Scan Page</button>
+    <button id="screenshot-btn" class="btn" style="margin-top: 0; background: #080C08; border: 1px solid #1F331F; color: #E0EBE0;">📸 Scan Screen</button>
+    <button id="page-btn" class="btn" style="margin-top: 0; background: #080C08; border: 1px solid #1F331F; color: #E0EBE0;">📄 Scan Page</button>
   </div>
   
-  <button id="upload-btn" class="btn" style="margin-top: 8px; background: #1D2633; border: 1px solid #2A3542; color: #FFFFFF;">📤 Upload & Scan Image</button>
+  <button id="upload-btn" class="btn" style="margin-top: 8px; background: #080C08; border: 1px solid #1F331F; color: #E0EBE0;">📤 Upload & Scan Image</button>
   <input type="file" id="image-input" accept="image/*" style="display: none;" />
   
   <button id="scan-btn" class="btn" style="margin-top: 8px;">Verify Typed Text</button>
