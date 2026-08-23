@@ -59,13 +59,27 @@ document.addEventListener("DOMContentLoaded", () => {
         // Clean Base64 prefix
         const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
 
-        executeScan({
-          offerText: "",
-          image: {
-            data: base64Data,
-            mimeType: "image/png"
+        // Extract readable page text from active tab
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: activeTab.id },
+            func: () => document.body ? document.body.innerText : ""
+          },
+          (results) => {
+            const pageText = (results && results[0] && results[0].result) ? results[0].result.trim() : "";
+            if (pageText) {
+              scanText.value = pageText.slice(0, 500) + (pageText.length > 500 ? "..." : "");
+            }
+
+            executeScan({
+              offerText: pageText,
+              image: {
+                data: base64Data,
+                mimeType: "image/png"
+              }
+            });
           }
-        });
+        );
       });
     });
   });
