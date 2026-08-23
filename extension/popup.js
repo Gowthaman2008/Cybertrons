@@ -8,6 +8,8 @@ const WEB_APP_URL = "https://cybertrons.vercel.app";
 document.addEventListener("DOMContentLoaded", () => {
   const scanText = document.getElementById("scan-text");
   const scanBtn = document.getElementById("scan-btn");
+  const screenshotBtn = document.getElementById("screenshot-btn");
+  const pageBtn = document.getElementById("page-btn");
   const loader = document.getElementById("loader");
   const resultPanel = document.getElementById("result-panel");
   const errorBox = document.getElementById("error-box");
@@ -21,24 +23,102 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load history list
   loadHistory();
 
+  // 1. Text-Only Manual Input scan click listener
   scanBtn.addEventListener("click", async () => {
     const text = scanText.value.trim();
     if (!text) {
       showError("Please paste some text to check first.");
       return;
     }
+    executeScan({ offerText: text });
+  });
 
-    // Reset view
+  // 2. Screenshot Scan click listener
+  screenshotBtn.addEventListener("click", () => {
+    // Disable interface
+    setControlsDisabled(true);
+    showLoader("Capturing tab viewport screenshot...");
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if (!activeTab) {
+        showError("Could not retrieve active tab to capture screenshot.");
+        setControlsDisabled(false);
+        return;
+      }
+
+      chrome.tabs.captureVisibleTab(null, { format: "png" }, async (dataUrl) => {
+        if (!dataUrl) {
+          showError("Screenshot capture failed. Make sure you are on a standard webpage.");
+          setControlsDisabled(false);
+          return;
+        }
+
+        // Clean Base64 prefix
+        const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+
+        executeScan({
+          offerText: "",
+          image: {
+            data: base64Data,
+            mimeType: "image/png"
+          }
+        });
+      });
+    });
+  });
+
+  // 3. Current Page Text Scan click listener
+  pageBtn.addEventListener("click", () => {
+    setControlsDisabled(true);
+    showLoader("Extracting text from current page...");
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if (!activeTab || !activeTab.id) {
+        showError("Could not identify current active tab.");
+        setControlsDisabled(false);
+        return;
+      }
+
+      // Inject script to scrape document inner text
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: activeTab.id },
+          func: () => document.body.innerText
+        },
+        (results) => {
+          if (!results || !results[0] || !results[0].result) {
+            showError("Could not extract text from this page. Make sure it contains readable text.");
+            setControlsDisabled(false);
+            return;
+          }
+
+          const extractedText = results[0].result.trim();
+          if (extractedText.length === 0) {
+            showError("The current page is empty.");
+            setControlsDisabled(false);
+            return;
+          }
+
+          scanText.value = extractedText.slice(0, 500) + (extractedText.length > 500 ? "..." : "");
+          executeScan({ offerText: extractedText });
+        }
+      );
+    });
+  });
+
+  async function executeScan(payload) {
     errorBox.style.display = "none";
     resultPanel.style.display = "none";
-    loader.style.display = "block";
-    scanBtn.disabled = true;
+    setControlsDisabled(true);
+    showLoader("Checking rules, ML classifier, and Gemini AI...");
 
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offerText: text })
+        body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
@@ -51,14 +131,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = await res.json();
-      renderResult(text, data);
+      const inputText = payload.offerText || `[SCREENSHOT SCAN] - CASE #${data.caseId}`;
+      renderResult(inputText, data);
       
       // Update history in storage
       chrome.storage.local.get({ history: [] }, (result) => {
         const history = result.history;
         const newEntry = {
           id: `${Date.now()}`,
-          text: text.slice(0, 80) + (text.length > 80 ? "..." : ""),
+          text: inputText.slice(0, 80) + (inputText.length > 80 ? "..." : ""),
           result: data,
           timestamp: Date.now()
         };
@@ -72,9 +153,20 @@ document.addEventListener("DOMContentLoaded", () => {
       showError(err.message || "Failed to contact analysis server.");
     } finally {
       loader.style.display = "none";
-      scanBtn.disabled = false;
+      setControlsDisabled(false);
     }
-  });
+  }
+
+  function setControlsDisabled(disabled) {
+    scanBtn.disabled = disabled;
+    screenshotBtn.disabled = disabled;
+    pageBtn.disabled = disabled;
+  }
+
+  function showLoader(text) {
+    loader.textContent = text;
+    loader.style.display = "block";
+  }
 
   function renderResult(text, data) {
     resultPanel.style.display = "block";
@@ -103,6 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function showError(msg) {
     errorBox.textContent = msg;
     errorBox.style.display = "block";
+    loader.style.display = "none";
   }
 
   function loadHistory() {

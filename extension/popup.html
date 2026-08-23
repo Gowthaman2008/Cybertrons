@@ -159,7 +159,13 @@
   <h2 class="header-title">Manual Offer Scanner</h2>
 
   <textarea id="scan-text" placeholder="Paste the suspicious job/internship offer message or conversation transcript here..."></textarea>
-  <button id="scan-btn" class="btn">Analyze Offer</button>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+    <button id="screenshot-btn" class="btn" style="margin-top: 0; background: #1D2633; border: 1px solid #2A3542; color: #FFFFFF;">📸 Scan Screen</button>
+    <button id="page-btn" class="btn" style="margin-top: 0; background: #1D2633; border: 1px solid #2A3542; color: #FFFFFF;">📄 Scan Page</button>
+  </div>
+  
+  <button id="scan-btn" class="btn" style="margin-top: 8px;">Verify Typed Text</button>
 
   <div id="loader" class="loader">
     Checking rules, ML classifier, and Gemini...
