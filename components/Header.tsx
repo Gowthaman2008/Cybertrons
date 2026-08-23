@@ -26,7 +26,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="bg-brand-dim/15 hover:bg-brand-dim/30 border border-brand-dim/30 hover:border-brand-bright text-brand-bright text-xs px-3 py-1.5 rounded font-mono transition-all flex items-center gap-1.5"
+              className="bg-brand hover:bg-brand-bright text-black font-bold text-xs px-4 py-2 rounded-full font-mono transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,255,102,0.25)] hover:shadow-[0_0_18px_rgba(0,255,102,0.55)] transform active:scale-95 duration-200"
             >
               🔌 Add Extension
             </button>
@@ -99,13 +99,22 @@ export default function Header() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              className="mt-5 w-full bg-brand-bright hover:bg-brand-bright/95 text-white font-mono py-2 rounded text-center text-xs font-semibold"
-            >
-              Got It
-            </button>
+            <div className="mt-5 flex gap-3">
+              <a
+                href="/scamcheck-extension.zip"
+                download
+                className="flex-1 bg-brand hover:bg-brand-bright text-black font-bold font-mono py-2.5 rounded text-center text-xs transition-all flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(0,255,102,0.15)] active:scale-[0.98]"
+              >
+                📥 Download ZIP
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="flex-1 bg-base-raised hover:bg-base-raised/80 border border-base-border text-ink-primary font-mono py-2.5 rounded text-center text-xs font-semibold transition-all active:scale-[0.98]"
+              >
+                Got It
+              </button>
+            </div>
           </div>
         </div>
       )}
