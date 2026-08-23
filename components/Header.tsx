@@ -28,13 +28,6 @@ export default function Header({ showModal, setShowModal, onLogoClick }: HeaderP
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="bg-brand hover:bg-brand-bright text-black font-bold text-xs px-4 py-2 rounded-full font-mono transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,255,102,0.25)] hover:shadow-[0_0_18px_rgba(0,255,102,0.55)] transform active:scale-95 duration-200"
-            >
-              🔌 Add Extension
-            </button>
             <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-ink-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block" />
               rule engine + gemini
