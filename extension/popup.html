@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 12px;
+      background-color: #121821;
+      color: #E7ECF2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      box-sizing: border-box;
+    }
+    .header-logo {
+      font-size: 11px;
+      font-weight: bold;
+      color: #00E6FF;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2px;
+      font-family: monospace;
+    }
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: #FFFFFF;
+      border-bottom: 1px solid #1D2633;
+      padding-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      background-color: #1D2633;
+      border: 1px solid #2A3542;
+      border-radius: 4px;
+      color: #E7ECF2;
+      font-size: 11px;
+      padding: 8px;
+      resize: none;
+      box-sizing: border-box;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: #00E6FF;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      background: #00E6FF;
+      color: #121821;
+      border: none;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .btn:hover {
+      background: #00B3CC;
+    }
+    .btn:disabled {
+      background: #2A3542;
+      color: #708090;
+      cursor: not-allowed;
+    }
+    .result-panel {
+      margin-top: 12px;
+      background: #1D2633;
+      border: 1px solid #2A3542;
+      border-radius: 6px;
+      padding: 10px;
+      display: none;
+    }
+    .score-badge {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      font-family: monospace;
+      margin-bottom: 6px;
+    }
+    .verdict-title {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .explanation {
+      font-size: 10px;
+      line-height: 1.4;
+      color: #9AA5B5;
+      margin-bottom: 8px;
+    }
+    .report-link {
+      display: block;
+      text-align: center;
+      font-size: 10px;
+      color: #00E6FF;
+      text-decoration: none;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+    .report-link:hover {
+      text-decoration: underline;
+    }
+    .history-section {
+      margin-top: 14px;
+      border-top: 1px solid #1D2633;
+      padding-top: 10px;
+    }
+    .history-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #708090;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    .history-item {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #1D2633;
+      border-radius: 4px;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: justify;
+      align-items: center;
+      gap: 6px;
+    }
+    .history-item:hover {
+      border-color: #2A3542;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .loader {
+      display: none;
+      font-size: 11px;
+      color: #00E6FF;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .error-box {
+      color: #E0503A;
+      font-size: 11px;
+      margin-top: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-logo">ScamCheck Forensics</div>
+  <h2 class="header-title">Manual Offer Scanner</h2>
+
+  <textarea id="scan-text" placeholder="Paste the suspicious job/internship offer message or conversation transcript here..."></textarea>
+  <button id="scan-btn" class="btn">Analyze Offer</button>
+
+  <div id="loader" class="loader">
+    Checking rules, ML classifier, and Gemini...
+  </div>
+
+  <div id="error-box" class="error-box"></div>
+
+  <!-- Real-time Scan Result Card -->
+  <div id="result-panel" class="result-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+      <div id="verdict" class="verdict-title">High Risk</div>
+      <div id="score" class="score-badge">81% Risk</div>
+    </div>
+    <div style="font-size: 8px; font-family: monospace; color: #708090; margin-bottom: 8px;" id="case-id">CASE #SF-2026-9042</div>
+    <div id="explanation" class="explanation"></div>
+    <a href="#" id="view-full-report" target="_blank" class="report-link">View Full Forensic Report ↗</a>
+  </div>
+
+  <!-- Recent checks panel -->
+  <div class="history-section" id="history-section">
+    <div class="history-title">Recent Scans (Last 3)</div>
+    <div id="history-list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

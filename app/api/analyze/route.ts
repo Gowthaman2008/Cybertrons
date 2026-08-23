@@ -9,6 +9,19 @@ export const runtime = "nodejs";
 
 const MAX_INPUT_LENGTH = 8000;
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: CORS_HEADERS,
+  });
+}
+
 function verdictFromScore(score: number): Verdict {
   if (score >= 65) return "High Risk";
   if (score >= 30) return "Medium Risk";
@@ -16,7 +29,7 @@ function verdictFromScore(score: number): Verdict {
 }
 
 function badRequest(message: string) {
-  return NextResponse.json({ error: message }, { status: 400 });
+  return NextResponse.json({ error: message }, { status: 400, headers: CORS_HEADERS });
 }
 
 export async function POST(req: NextRequest) {
@@ -78,7 +91,7 @@ export async function POST(req: NextRequest) {
         {
           error: "The AI assessment service is currently unavailable. Since you uploaded an image-only request, we cannot perform the scan. Please paste the offer text instead to run a rule-based check.",
         },
-        { status: 503 }
+        { status: 503, headers: CORS_HEADERS }
       );
     }
   }
@@ -106,5 +119,5 @@ export async function POST(req: NextRequest) {
     timestamp,
   };
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, { headers: CORS_HEADERS });
 }

@@ -90,6 +90,33 @@ finalScore = (RuleScore * 0.5) + (MlScore * 0.5)
 
 ---
 
+## Setup ScamCheck Browser Companion Extension
+
+The browser extension (Manifest V3) lets you run opportunity checks directly inside Gmail, WhatsApp Web, LinkedIn, or any webpage using the context menu or manual paste toolbar popup.
+
+### How to install locally (Chrome / Edge / Brave):
+1. Open Chrome and navigate to `chrome://extensions/`.
+2. Enable **Developer Mode** in the top-right corner.
+3. Click **Load Unpacked** in the top-left corner.
+4. Select the **`extension`** folder from this project directory.
+
+### Swapping between Localhost and Production URLs:
+By default, the extension calls the live production endpoint. To point to your local dev environment:
+- Open [`extension/background.js`](file:///d:/HACKATHON/scamcheck/extension/background.js):
+  - Comment out `const API_URL = "https://cybertrons.vercel.app/api/analyze";`
+  - Uncomment `const API_URL = "http://localhost:3000/api/analyze";`
+- Open [`extension/popup.js`](file:///d:/HACKATHON/scamcheck/extension/popup.js):
+  - Comment out the production constants and uncomment the `localhost` constants at the top.
+- Click the **Update** or **Reload** icon on the extension page in `chrome://extensions/` to apply changes.
+
+### How to use:
+- **Right-Click Method**: Highlight any text on a webpage, right-click, and select **Check with ScamCheck**. A floating incident report card will slide in from the top-right. Click **View Full Forensic Report** to deep-link straight to the web dashboard.
+- **Toolbar Popup Method**: Click the extension icon in the toolbar, paste raw text, and click **Analyze Offer**. It renders a mini-report card along with a list of the last 3 checks.
+
+---
+
+---
+
 ## Project Structure
 
 ```

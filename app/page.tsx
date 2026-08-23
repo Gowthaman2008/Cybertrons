@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import OfferForm from "@/components/OfferForm";
 import ResultsPanel from "@/components/ResultsPanel";
@@ -11,7 +12,7 @@ import { AnalysisResult, OfferInput } from "@/lib/types";
 
 const MAX_HISTORY = 8;
 
-export default function Home() {
+function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -19,6 +20,16 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [currentOfferText, setCurrentOfferText] = useState("");
   const [activeTab, setActiveTab] = useState<"scan" | "game">("scan");
+
+  const searchParams = useSearchParams();
+
+  // Trigger automatic scan if 'text' query parameter is present on mount
+  useEffect(() => {
+    const textParam = searchParams.get("text");
+    if (textParam) {
+      handleSubmit({ offerText: textParam });
+    }
+  }, [searchParams]);
 
   async function handleSubmit(input: OfferInput) {
     setIsLoading(true);
@@ -171,5 +182,17 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-base-bg text-ink-primary flex items-center justify-center font-mono">
+        Loading Scam Forensics Lab...
+      </div>
+    }>
+      <Dashboard />
+    </Suspense>
   );
 }
