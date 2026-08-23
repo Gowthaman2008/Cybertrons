@@ -115,15 +115,18 @@ function Dashboard() {
           backgroundSize: "24px 24px"
         }}
       >
-        <div className="flex flex-col items-center max-w-xl w-full text-center">
-          <div className="transform scale-[1.3] sm:scale-[2.0] md:scale-[2.4] transition-transform duration-300">
-            <CommitsGrid text="CYBER" />
+        <div className="flex flex-col items-center max-w-2xl w-full text-center">
+          <div className="transform scale-[0.65] sm:scale-[1.1] md:scale-[1.3] transition-transform duration-300">
+            <CommitsGrid text="CYBERTRONS" />
           </div>
+          <h2 className="mt-6 font-display font-bold text-xs sm:text-sm tracking-[0.3em] uppercase text-brand-bright drop-shadow-[0_0_12px_rgba(57,255,20,0.5)] select-none">
+            Scam Check
+          </h2>
         </div>
 
         {/* Footer brand label positioned at the bottom of the viewport */}
         <p className="absolute bottom-8 text-[11px] sm:text-xs font-body tracking-[0.15em] text-white/45 uppercase select-none">
-          powered by <span className="font-semibold text-white/85">Cybertrons</span>
+          TEAM ID : <span className="font-semibold text-white/85">HS2026-086</span>
         </p>
       </div>
 
