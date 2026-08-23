@@ -101,7 +101,7 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
             key={idx}
             points={points}
             fill="none"
-            stroke="#DDE1E5"
+            stroke="#1F331F"
             strokeWidth="0.8"
             strokeDasharray={idx < 3 ? "2,2" : undefined}
           />
@@ -117,7 +117,7 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
               y1={cy}
               x2={x}
               y2={y}
-              stroke="#DDE1E5"
+              stroke="#1F331F"
               strokeWidth="0.8"
             />
           );
@@ -145,7 +145,7 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
               cy={y}
               r="3.5"
               fill={strokeColor}
-              stroke="#FFFFFF"
+              stroke="#080C08"
               strokeWidth="1"
             />
           );
@@ -163,7 +163,7 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
               key={i}
               x={x + dx}
               y={y + dy}
-              fill="#475569"
+              fill="#E0EBE0"
               fontSize="10"
               fontFamily="monospace"
               textAnchor={anchor}

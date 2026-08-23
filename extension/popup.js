@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const scanBtn = document.getElementById("scan-btn");
   const screenshotBtn = document.getElementById("screenshot-btn");
   const pageBtn = document.getElementById("page-btn");
+  const uploadBtn = document.getElementById("upload-btn");
+  const imageInput = document.getElementById("image-input");
   const loader = document.getElementById("loader");
   const resultPanel = document.getElementById("result-panel");
   const errorBox = document.getElementById("error-box");
@@ -108,6 +110,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // 4. Upload Image click triggers
+  uploadBtn.addEventListener("click", () => {
+    imageInput.click();
+  });
+
+  imageInput.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showError("Please upload a valid image file (PNG, JPG, JPEG, WEBP).");
+      return;
+    }
+
+    setControlsDisabled(true);
+    showLoader("Reading image file details...");
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result;
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+
+      executeScan({
+        offerText: "",
+        image: {
+          data: base64Data,
+          mimeType: file.type
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+    // Reset file input value so same image can be reselected if needed
+    imageInput.value = "";
+  });
+
   async function executeScan(payload) {
     errorBox.style.display = "none";
     resultPanel.style.display = "none";
@@ -161,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
     scanBtn.disabled = disabled;
     screenshotBtn.disabled = disabled;
     pageBtn.disabled = disabled;
+    uploadBtn.disabled = disabled;
   }
 
   function showLoader(text) {

@@ -8,32 +8,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Base light mode console surfaces - soft light grey & white card frames.
+        // Base Matrix theme pitch black & dark green borders.
         base: {
-          bg: "#F4F6F8",
-          surface: "#FFFFFF",
-          raised: "#E9ECEF",
-          border: "#DDE1E5",
+          bg: "#000000",
+          surface: "#080C08",
+          raised: "#121A12",
+          border: "#1F331F",
         },
         ink: {
-          primary: "#1E293B",
-          muted: "#475569",
-          faint: "#64748B",
+          primary: "#E0EBE0",
+          muted: "#99B399",
+          faint: "#526652",
         },
-        // Brand accent: royal blue - high accessibility and tech look.
+        // Brand accent: neon green matrix.
         brand: {
-          DEFAULT: "#2563EB",
-          bright: "#1D4ED8",
-          dim: "#DBEAFE",
+          DEFAULT: "#00FF66",
+          bright: "#39FF14",
+          dim: "rgba(0, 255, 102, 0.15)",
         },
         // Risk traffic-light system.
         risk: {
-          low: "#16A34A",
-          lowDim: "#DCFCE7",
-          medium: "#D97706",
-          mediumDim: "#FEF3C7",
-          high: "#DC2626",
-          highDim: "#FEE2E2",
+          low: "#3FB27F",
+          lowDim: "#1C3A2C",
+          medium: "#E0A430",
+          mediumDim: "#3D3016",
+          high: "#E0503A",
+          highDim: "#3D1F18",
         },
       },
       fontFamily: {
@@ -42,9 +42,9 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       backgroundImage: {
-        // Subtle grid overlay for premium light design
+        // Subtle dark grid overlay
         "scan-grid":
-          "linear-gradient(to right, rgba(37,99,235,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(37,99,235,0.035) 1px, transparent 1px)",
+          "linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px)",
       },
       backgroundSize: {
         grid: "24px 24px",
@@ -66,12 +66,23 @@ const config: Config = {
           "0%": { transform: "translateX(16px)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
+        highlight: {
+          "0%": { backgroundColor: "transparent" },
+          "100%": { backgroundColor: "var(--highlight)" },
+        },
+        flash: {
+          "0%": { backgroundColor: "#121821" },
+          "50%": { backgroundColor: "var(--highlight)" },
+          "100%": { backgroundColor: "#121821" },
+        },
       },
       animation: {
         scanline: "scanline 1.8s linear infinite",
         "fade-in": "fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
         float: "float 5s ease-in-out infinite",
         "slide-in-right": "slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        highlight: "highlight 0.6s ease forwards",
+        flash: "flash 0.6s ease forwards",
       },
     },
   },

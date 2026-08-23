@@ -8,6 +8,8 @@ import ResultsPanel from "@/components/ResultsPanel";
 import ScanningState from "@/components/ScanningState";
 import HistoryPanel, { HistoryEntry } from "@/components/HistoryPanel";
 import ScamGame from "@/components/ScamGame";
+import { DarkGradientBg } from "@/components/ui/elegant-dark-pattern";
+import { CommitsGrid } from "@/components/ui/commits-grid";
 import { AnalysisResult, OfferInput } from "@/lib/types";
 
 const MAX_HISTORY = 8;
@@ -20,8 +22,18 @@ function Dashboard() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [currentOfferText, setCurrentOfferText] = useState("");
   const [activeTab, setActiveTab] = useState<"scan" | "game">("scan");
+  const [view, setView] = useState<"input" | "report">("input");
+  const [showIntro, setShowIntro] = useState(true);
 
   const searchParams = useSearchParams();
+
+  // Intro animation timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Trigger automatic scan if 'text' query parameter is present on mount
   useEffect(() => {
@@ -36,6 +48,7 @@ function Dashboard() {
     setErrorMessage(null);
     setResult(null);
     setCurrentOfferText(input.offerText || "");
+    setView("input"); // Stay on input page while loading scanning animation
 
     try {
       const res = await fetch("/api/analyze", {
@@ -58,6 +71,7 @@ function Dashboard() {
 
       const data: AnalysisResult = await res.json();
       setResult(data);
+      setView("report"); // Switch to separate report view upon successful analysis
 
       const previewText = input.offerText
         ? input.offerText.slice(0, 70) + (input.offerText.length > 70 ? "…" : "")
@@ -80,21 +94,31 @@ function Dashboard() {
     }
   }
 
+  // Reload history logs and render in report view
   function handleSelectHistory(entry: HistoryEntry) {
     setResult(entry.result);
     setActiveId(entry.id);
     setErrorMessage(null);
-    // Best-effort recovery of preview text for ActionStation if needed
     setCurrentOfferText(entry.result.llm?.explanation || "");
+    setView("report");
   }
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Cyber Hacking Intro Loader */}
+      <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0F14] px-4 transition-opacity duration-700 ${showIntro ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        <div className="flex flex-col items-center max-w-xl w-full text-center">
+          <div className="transform scale-[1.3] sm:scale-[2.0] md:scale-[2.4] transition-transform duration-300">
+            <CommitsGrid text="CYBER" />
+          </div>
+        </div>
+      </div>
+
       <Header />
 
       <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-8">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-base-border mb-8 gap-6 text-sm font-mono">
+        <div className="flex border-b border-base-border mb-8 gap-6 text-sm font-mono select-none">
           <button
             type="button"
             onClick={() => setActiveTab("scan")}
@@ -121,46 +145,48 @@ function Dashboard() {
 
         {activeTab === "scan" ? (
           <div>
-            <div className="mb-8 max-w-2xl">
-              <h2 className="font-display font-600 text-2xl sm:text-3xl tracking-tight text-ink-primary mb-2">
-                Check an offer before you respond
-              </h2>
-              <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
-                Paste the internship or job message you received, or upload a screenshot. ScamCheck runs a deterministic
-                red-flag scan and an AI review together, then explains exactly what looks off — so
-                you can verify before you act, not after.
-              </p>
-            </div>
+            {isLoading ? (
+              // Loading State occupies the view during scan
+              <div className="max-w-2xl mx-auto py-12">
+                <ScanningState />
+              </div>
+            ) : view === "input" ? (
+              // View 1: Paste details and upload documents
+              <div className="max-w-3xl mx-auto space-y-8">
+                <div className="mb-4">
+                  <h2 className="font-display font-600 text-2xl sm:text-3xl tracking-tight text-ink-primary mb-2">
+                    Check an offer before you respond
+                  </h2>
+                  <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
+                    Paste the internship or job message you received, or upload a screenshot. ScamCheck runs a deterministic
+                    red-flag scan and an AI review together, then explains exactly what looks off.
+                  </p>
+                </div>
 
-            <div className="grid lg:grid-cols-5 gap-6">
-              <div className="lg:col-span-3 space-y-6">
                 <OfferForm onSubmit={handleSubmit} isLoading={isLoading} errorMessage={errorMessage} />
-                {history.length > 0 && (
-                  <div className="lg:hidden">
-                    <HistoryPanel entries={history} onSelect={handleSelectHistory} activeId={activeId} />
-                  </div>
-                )}
-              </div>
 
-              <div className="lg:col-span-2 space-y-6">
-                {isLoading && <ScanningState />}
-                {!isLoading && result && <ResultsPanel result={result} offerText={currentOfferText} />}
-                {!isLoading && !result && (
-                  <div className="border border-dashed border-base-border rounded-lg px-6 py-10 text-center">
-                    <p className="text-sm text-ink-faint font-mono">
-                      results will appear here after you run a check
-                    </p>
-                  </div>
-                )}
                 {history.length > 0 && (
-                  <div className="hidden lg:block">
+                  <div className="pt-4 animate-fade-in">
                     <HistoryPanel entries={history} onSelect={handleSelectHistory} activeId={activeId} />
                   </div>
                 )}
               </div>
-            </div>
+            ) : (
+              // View 2: Separate, dedicated Forensic Report view
+              <div className="max-w-3xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setView("input")}
+                  className="mb-6 inline-flex items-center gap-2 text-xs font-mono font-bold text-brand-bright hover:underline transition-all transform active:translate-x-[-2px]"
+                >
+                  ← Back to Scanner
+                </button>
+                {result && <ResultsPanel result={result} offerText={currentOfferText} />}
+              </div>
+            )}
           </div>
         ) : (
+          // Tab 2: Scam game simulator
           <div className="py-2">
             <div className="mb-8 text-center max-w-xl mx-auto">
               <h2 className="font-display font-600 text-2xl sm:text-3xl tracking-tight text-ink-primary mb-2">
@@ -192,7 +218,9 @@ export default function Home() {
         Loading Scam Forensics Lab...
       </div>
     }>
-      <Dashboard />
+      <DarkGradientBg>
+        <Dashboard />
+      </DarkGradientBg>
     </Suspense>
   );
 }

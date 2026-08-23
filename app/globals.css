@@ -18,12 +18,12 @@
 }
 
 * {
-  scrollbar-color: #CBD5E1 #F4F6F8;
+  scrollbar-color: #1F331F #000000;
 }
 
 body {
-  background-color: #F4F6F8;
-  color: #1E293B;
+  background-color: #000000;
+  color: #E0EBE0;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -40,6 +40,6 @@ body {
 
 /* Visible keyboard focus ring, consistent across interactive elements. */
 :focus-visible {
-  outline: 2px solid #2563EB;
+  outline: 2px solid #00FF66;
   outline-offset: 2px;
 }
