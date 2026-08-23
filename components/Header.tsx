@@ -30,7 +30,7 @@ export default function Header({ showModal, setShowModal, onLogoClick }: HeaderP
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-ink-muted">
               <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block" />
-              rule engine + gemini
+              multi-layer forensics + AI
             </div>
           </div>
         </div>

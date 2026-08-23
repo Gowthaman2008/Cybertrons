@@ -53,7 +53,7 @@ export default function ResultsPanel({ result, offerText }: { result: AnalysisRe
       const data = await res.json();
       setPsychologyText(data.psychology);
     } catch (err) {
-      setPsychologyText("Unable to retrieve psychological tactics analysis. Please verify your Gemini API key is configured.");
+      setPsychologyText("Unable to retrieve psychological tactics analysis at this moment. Please try again.");
     } finally {
       setLoadingPsychology(false);
     }

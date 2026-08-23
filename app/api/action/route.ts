@@ -93,7 +93,7 @@ Make it look highly professional and formal. Use "Gowthaman P R" as the reportin
   }
 
   // 2. Fall back to Gemini
-  if (geminiApiKey) {
+  if (geminiApiKey && !geminiApiKey.startsWith("AQ.Ab8RN6") && geminiApiKey.trim().length > 0) {
     try {
       const ai = new GoogleGenAI({ apiKey: geminiApiKey });
       const response = await ai.models.generateContent({
@@ -110,5 +110,48 @@ Make it look highly professional and formal. Use "Gowthaman P R" as the reportin
     }
   }
 
-  return NextResponse.json({ error: "Failed to generate draft." }, { status: 500 });
+  // 3. Fallback: Dynamic offline template generation
+  if (actionType === "rejection") {
+    const rejectionDraft = `Dear Hiring Team / Recruiter,
+
+Thank you for reaching out regarding the opportunity with ${companyName || "your organization"}. 
+
+After reviewing the details, I have decided to respectfully decline this offer as I am pursuing other commitments at this time. 
+
+I appreciate your time and consideration.
+
+Best regards,
+Gowthaman P R`;
+    return NextResponse.json({ draft: rejectionDraft });
+  } else {
+    const flagsBullets = (additionalFlags && additionalFlags.length > 0)
+      ? additionalFlags.map((f: string) => `• ${f}`).join("\n")
+      : "• Suspicious recruitment communication and unverified employer credentials\n• Irregular hiring workflow without standard interview process";
+
+    const reportDraft = `Subject: INCIDENT REPORT: Suspected Recruitment Scam - ${companyName || "Unverified Recruiter"}
+
+Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+To: University Placement Cell / Campus Cybersecurity Helpdesk
+From: Gowthaman P R
+
+Dear Placement Cell / Security Team,
+
+I am writing to report a suspicious job/internship offer received that exhibits clear indicators of recruitment fraud (Forensic Risk Assessment: ${riskScore}%, Verdict: ${verdict}).
+
+Incident Details:
+• Claimed Organization: ${companyName || "Unknown / Unverified"}
+• Forensic Summary: ${explanation || "High-risk recruitment pattern detected."}
+
+Key Red Flags Noted:
+${flagsBullets}
+
+Context / Excerpt:
+"${offerText ? offerText.slice(0, 300) + (offerText.length > 300 ? "..." : "") : "Submitted via document screenshot scan"}"
+
+I am bringing this to your attention so that alerts can be issued to protect fellow students from potential financial or data security risks.
+
+Sincerely,
+Gowthaman P R`;
+    return NextResponse.json({ draft: reportDraft });
+  }
 }

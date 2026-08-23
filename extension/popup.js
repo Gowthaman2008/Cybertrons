@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
     errorBox.style.display = "none";
     resultPanel.style.display = "none";
     setControlsDisabled(true);
-    showLoader("Checking rules, ML classifier, and Gemini AI...");
+    showLoader("Running multi-layer forensics analysis...");
 
     try {
       const res = await fetch(API_URL, {

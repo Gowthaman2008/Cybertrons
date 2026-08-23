@@ -39,7 +39,7 @@ export default function ActionStation({ result, offerText }: { result: AnalysisR
       const data = await res.json();
       setDraft(data.draft);
     } catch (err) {
-      alert("Error generating action template. Please ensure your Gemini API Key is configured.");
+      alert("Error generating action template. Please try again.");
     } finally {
       setIsLoading(false);
     }

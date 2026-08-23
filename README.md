@@ -80,8 +80,9 @@ finalScore = (RuleScore * 0.5) + (MlScore * 0.5)
    ```bash
    cp .env.example .env.local
    ```
-   Paste your Gemini API Key in `.env.local`:
+   Paste your free Groq API Key (or Gemini key) in `.env.local`:
    ```env
+   GROQ_API_KEY=gsk_your_groq_api_key_here
    GEMINI_API_KEY=your_gemini_api_key_here
    ```
 3. **Run local server**:
@@ -96,7 +97,7 @@ finalScore = (RuleScore * 0.5) + (MlScore * 0.5)
 
 1. Push this repository to GitHub.
 2. Import the project into Vercel.
-3. Configure the environment variable **`GEMINI_API_KEY`** in the project settings.
+3. Configure the environment variable **`GROQ_API_KEY`** (and optionally **`GEMINI_API_KEY`**) in the project settings.
 4. Deploy. Vercel automatically builds and deploys the Next.js routes.
 
 ---
