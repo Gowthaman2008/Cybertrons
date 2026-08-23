@@ -1,6 +1,7 @@
 # ScamCheck — Scam Forensics Lab
 
 Built for **Hackspora 2.0**.
+
 Team Name: Cybertrons
 Team ID : HS2026-086
 
