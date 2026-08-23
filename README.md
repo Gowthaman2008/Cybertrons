@@ -1,8 +1,8 @@
 # ScamCheck — Scam Forensics Lab
 
 Built for **Hackspora 2.0**.
-
-Team Name: Cybertrons (HS2026-086)
+Team Name: Cybertrons
+Team ID : HS2026-086
 
 
 ScamCheck is an advanced opportunity verification and cyber-forensics platform. Students receive internship/job opportunities over WhatsApp, email, and social media, and often have no quick way to tell a real offer from a scam. ScamCheck parses the offer letter or chat screenshot, passes it through a multi-layered forensics pipeline, and generates a structured incident file with highlighted evidence tooltips, risk metrics, and cosine similarity matches against known fraud types.
