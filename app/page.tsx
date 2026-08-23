@@ -44,9 +44,13 @@ export default function Home() {
       const data: AnalysisResult = await res.json();
       setResult(data);
 
+      const previewText = input.offerText
+        ? input.offerText.slice(0, 70) + (input.offerText.length > 70 ? "…" : "")
+        : "Image Scan - " + (input.companyName || "Unknown Company");
+
       const entry: HistoryEntry = {
         id: `${Date.now()}`,
-        preview: input.offerText.slice(0, 70) + (input.offerText.length > 70 ? "…" : ""),
+        preview: previewText,
         result: data,
         timestamp: Date.now(),
       };

@@ -16,16 +16,53 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
   const [companyName, setCompanyName] = useState("");
   const [offeredAmount, setOfferedAmount] = useState("");
   const [showOptional, setShowOptional] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (PNG, JPG, JPEG, WEBP).");
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveImage() {
+    setImageFile(null);
+    setImagePreview(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!offerText.trim() || isLoading) return;
+    if ((!offerText.trim() && !imagePreview) || isLoading) return;
+
+    let imagePayload = undefined;
+    if (imagePreview && imageFile) {
+      const commaIndex = imagePreview.indexOf(",");
+      if (commaIndex !== -1) {
+        imagePayload = {
+          data: imagePreview.substring(commaIndex + 1),
+          mimeType: imageFile.type,
+        };
+      }
+    }
+
     onSubmit({
       offerText: offerText.trim(),
       senderEmail: senderEmail.trim() || undefined,
       senderPhone: senderPhone.trim() || undefined,
       companyName: companyName.trim() || undefined,
       offeredAmount: offeredAmount.trim() || undefined,
+      image: imagePayload,
     });
   }
 
@@ -34,20 +71,73 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
       onSubmit={handleSubmit}
       className="bg-base-surface border border-base-border rounded-lg p-5 sm:p-6"
     >
-      <label htmlFor="offerText" className="block text-sm font-medium text-ink-primary mb-2">
-        Paste the offer message
-      </label>
-      <textarea
-        id="offerText"
-        value={offerText}
-        onChange={(e) => setOfferText(e.target.value)}
-        placeholder={`Paste the full internship or job offer message here — from WhatsApp, email, LinkedIn, wherever you received it.\n\nExample: "Dear Candidate, we are pleased to inform you of your selection..."`}
-        rows={9}
-        maxLength={8000}
-        className="w-full resize-y rounded-md bg-base-bg border border-base-border px-4 py-3 text-sm text-ink-primary placeholder:text-ink-faint focus:border-brand focus:ring-0 outline-none font-body leading-relaxed"
-      />
-      <div className="flex justify-between mt-1 mb-4">
-        <span className="text-xs text-ink-faint font-mono">{offerText.length}/8000</span>
+      <div className="grid md:grid-cols-2 gap-5 mb-4">
+        <div>
+          <label htmlFor="offerText" className="block text-sm font-medium text-ink-primary mb-2">
+            Paste the offer message
+          </label>
+          <textarea
+            id="offerText"
+            value={offerText}
+            onChange={(e) => setOfferText(e.target.value)}
+            placeholder={`Paste the full internship or job offer message here — from WhatsApp, email, LinkedIn, wherever you received it.\n\nExample: "Dear Candidate, we are pleased to inform you of your selection..."`}
+            rows={8}
+            maxLength={8000}
+            className="w-full resize-none rounded-md bg-base-bg border border-base-border px-4 py-3 text-sm text-ink-primary placeholder:text-ink-faint focus:border-brand focus:ring-0 outline-none font-body leading-relaxed"
+          />
+          <div className="flex justify-between mt-1.5">
+            <span className="text-xs text-ink-faint font-mono">{offerText.length}/8000</span>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-ink-primary mb-2">
+            Or upload an image / screenshot
+          </label>
+
+          {!imagePreview ? (
+            <div className="w-full h-[184px] rounded-md bg-base-bg border border-dashed border-base-border flex flex-col items-center justify-center p-4 hover:border-brand transition-colors cursor-pointer relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+              />
+              <svg
+                className="w-8 h-8 text-ink-faint group-hover:text-brand-bright mb-2 transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="text-sm font-medium text-ink-primary">Click or drag screenshot</p>
+              <p className="text-xs text-ink-faint mt-0.5">PNG, JPG, WEBP</p>
+            </div>
+          ) : (
+            <div className="w-full h-[184px] rounded-md bg-base-bg border border-base-border relative overflow-hidden flex items-center justify-center p-2 group">
+              <img
+                src={imagePreview}
+                alt="Screenshot preview"
+                className="max-w-full max-h-full object-contain rounded"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 bg-base-raised border border-base-border text-ink-primary hover:bg-risk-high hover:text-white rounded-full p-1.5 shadow-md transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <button
@@ -95,7 +185,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
 
       <button
         type="submit"
-        disabled={!offerText.trim() || isLoading}
+        disabled={(!offerText.trim() && !imagePreview) || isLoading}
         className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-brand hover:bg-brand-bright disabled:bg-base-raised disabled:text-ink-faint disabled:cursor-not-allowed text-white font-medium text-sm px-6 py-3 transition-colors"
       >
         {isLoading ? (

@@ -30,6 +30,10 @@ export interface OfferInput {
   senderPhone?: string;
   companyName?: string;
   offeredAmount?: string;
+  image?: {
+    data: string; // Base64 string (excluding prefix)
+    mimeType: string; // e.g. "image/png" or "image/jpeg"
+  };
 }
 
 export type Verdict = "Low Risk" | "Medium Risk" | "High Risk";

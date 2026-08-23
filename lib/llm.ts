@@ -20,11 +20,11 @@ const VALID_VERDICTS: Verdict[] = ["Low Risk", "Medium Risk", "High Risk"];
 
 function buildSystemInstruction(): string {
   return `You are a fraud-detection assistant embedded in a student-facing tool called ScamCheck.
-You will be given (1) the raw text of a job/internship offer a student received, and (2) a list of
+You will be given (1) the raw text (or an image of a document) of a job/internship offer a student received, and (2) a list of
 red flags a deterministic rule engine already found in that text.
 
 Your job: assess how likely this offer is to be a scam, using the rule flags as a starting point but
-also reading the raw text for anything the rules missed (tone, plausibility, internal inconsistencies,
+also reading the raw text or the uploaded image for anything the rules missed (tone, plausibility, internal inconsistencies,
 role/pay mismatch, requests that don't fit how real hiring works, etc).
 
 Guidance for scoring:
@@ -50,10 +50,14 @@ function buildUserMessage(input: OfferInput, ruleFlags: RuleFlag[]): string {
     ? ruleFlags.map((f) => `- [${f.severity.toUpperCase()}] ${f.label}: ${f.explanation}`).join("\n")
     : "(none triggered)";
 
-  return `OFFER TEXT:
-"""
-${input.offerText}
-"""
+  let textSection = "";
+  if (input.offerText) {
+    textSection = `OFFER TEXT:\n"""\n${input.offerText}\n"""`;
+  } else if (input.image) {
+    textSection = `OFFER IMAGE PROVIDED. Please read and extract the text from the attached image to perform your risk assessment.`;
+  }
+
+  return `${textSection}
 
 ADDITIONAL FIELDS PROVIDED BY THE STUDENT:
 ${meta || "(none provided)"}
@@ -118,9 +122,22 @@ export async function getLlmAssessment(
     required: ["riskScore", "verdict", "explanation", "additionalFlags"],
   };
 
+  const contents: any[] = [];
+  if (input.image) {
+    contents.push({
+      inlineData: {
+        data: input.image.data,
+        mimeType: input.image.mimeType,
+      },
+    });
+  }
+  contents.push({
+    text: buildUserMessage(input, ruleFlags),
+  });
+
   const response = await ai.models.generateContent({
     model: MODEL,
-    contents: buildUserMessage(input, ruleFlags),
+    contents,
     config: {
       systemInstruction: buildSystemInstruction(),
       responseMimeType: "application/json",

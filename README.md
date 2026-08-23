@@ -1,6 +1,6 @@
 # ScamCheck — Opportunity Verification
 
-Built for **Hackspora 2.0**.
+Built for **Hackspora 2.0 (PS3)**.
 
 Students receive internship/job opportunities over WhatsApp, email, and social media and
 often have no quick way to tell a real offer from a scam. ScamCheck lets a student paste
