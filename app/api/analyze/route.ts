@@ -89,11 +89,19 @@ export async function POST(req: NextRequest) {
     console.error("LLM assessment failed, falling back to rule-based score:", err);
   }
 
-  // Combined weighted score calculation: 20% Rules + 20% ML + 60% LLM
-  const finalScore = llm
-    ? Math.round(ruleScore * 0.2 + mlScore * 0.2 + llm.riskScore * 0.6)
-    : Math.round(ruleScore * 0.5 + mlScore * 0.5);
+  // Combined weighted score calculation with decisive fraud scaling
+  let calculatedScore = llm
+    ? Math.round(ruleScore * 0.25 + mlScore * 0.25 + llm.riskScore * 0.5)
+    : Math.round(ruleScore * 0.6 + mlScore * 0.4);
 
+  // If high-severity flags are confirmed by rules (e.g. upfront fee, fake domain), ensure decisive High Risk score
+  if (ruleFlags.some((f) => f.severity === "high")) {
+    calculatedScore = Math.max(calculatedScore, Math.min(96, Math.max(80, ruleScore)));
+  } else if (ruleFlags.length === 0) {
+    calculatedScore = Math.min(calculatedScore, 10);
+  }
+
+  const finalScore = Math.min(100, Math.max(0, calculatedScore));
   const finalVerdict = verdictFromScore(finalScore);
 
   const caseId = "SF-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);

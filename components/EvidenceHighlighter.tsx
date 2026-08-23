@@ -130,7 +130,7 @@ export default function EvidenceHighlighter({ text, flags }: Props) {
   }
 
   return (
-    <div className="bg-base-bg border border-base-border rounded p-4 font-body text-xs sm:text-sm text-ink-muted leading-relaxed whitespace-pre-wrap max-h-[300px] overflow-y-auto pr-2 relative shadow-inner">
+    <div className="bg-base-bg border border-base-border rounded p-4 font-body text-xs sm:text-sm text-ink-muted leading-relaxed whitespace-pre-wrap break-words overflow-x-hidden max-h-[300px] overflow-y-auto pr-2 relative shadow-inner">
       <div className="absolute top-2 right-2 bg-base-surface px-1.5 py-0.5 rounded text-[8px] font-mono text-ink-faint border border-base-border select-none pointer-events-none">
         pasted document view
       </div>

@@ -2,31 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
 async function generateWithGroq(apiKey: string, prompt: string): Promise<string> {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: "You are a professional assistant helping students with cybersecurity safety and professional communications." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.3,
-    }),
-  });
+  const models = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "gemma2-9b-it",
+    "mixtral-8x7b-32768"
+  ];
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  for (const model of models) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: "You are a professional assistant helping students with cybersecurity safety and professional communications." },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.3,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text) return text;
+      }
+    } catch (e) {
+      // Continue to next model
+    }
   }
 
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error("Empty response from Groq.");
-  return text;
+  throw new Error("All Groq models failed for draft generation.");
 }
 
 export async function POST(req: NextRequest) {

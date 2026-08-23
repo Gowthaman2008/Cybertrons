@@ -25,6 +25,9 @@
   },
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://cybertrons.vercel.app/*"
+    "https://cybertrons.vercel.app/*",
+    "https://cdn.jsdelivr.net/*",
+    "https://unpkg.com/*",
+    "<all_urls>"
   ]
 }

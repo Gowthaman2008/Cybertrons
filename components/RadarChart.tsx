@@ -23,9 +23,9 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
     { label: "Offer Realism", key: "offerRealism" as const }
   ];
 
-  const cx = 180;
-  const cy = 140;
-  const r = 80;
+  const cx = 230;
+  const cy = 155;
+  const r = 75;
   const numSides = 5;
 
   // Color theme mapping
@@ -66,8 +66,8 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
   // Generate data polygon points
   const dataPoints = axes
     .map((axis, i) => {
-      const val = scores[axis.key];
-      const levelRadius = r * (val / 100);
+      const val = scores[axis.key] ?? 10;
+      const levelRadius = r * Math.max(0.1, val / 100);
       const { x, y } = getCoordinates(i, levelRadius);
       return `${x},${y}`;
     })
@@ -82,19 +82,25 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
 
   const getLabelOffset = (index: number) => {
     const angle = -Math.PI / 2 + (index * 2 * Math.PI) / numSides;
+    if (index === 0) {
+      return { dx: 0, dy: -12 };
+    }
     return {
-      dx: 12 * Math.cos(angle),
-      dy: 10 * Math.sin(angle) + 4
+      dx: 14 * Math.cos(angle),
+      dy: 8 * Math.sin(angle) + 4
     };
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-3 bg-base-bg rounded border border-base-border w-full max-w-[400px] mx-auto select-none">
-      <h4 className="text-[10px] font-mono uppercase text-ink-faint tracking-wider mb-2">
+    <div className="flex flex-col items-center justify-center p-3 bg-base-bg rounded border border-base-border w-full mx-auto select-none overflow-hidden">
+      <h4 className="text-[10px] font-mono uppercase text-ink-faint tracking-wider mb-1 text-center">
         Forensic Category Breakdown
       </h4>
 
-      <svg width="360" height="270" className="overflow-visible">
+      <svg
+        viewBox="0 0 460 310"
+        className="w-full h-auto max-w-[390px] mx-auto block overflow-visible"
+      >
         {/* Concentric Grids */}
         {gridPolygons.map((points, idx) => (
           <polygon
@@ -136,8 +142,8 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
 
         {/* Vertex Dots */}
         {axes.map((axis, i) => {
-          const val = scores[axis.key];
-          const { x, y } = getCoordinates(i, r * (val / 100));
+          const val = scores[axis.key] ?? 10;
+          const { x, y } = getCoordinates(i, r * Math.max(0.1, val / 100));
           return (
             <circle
               key={i}
@@ -156,7 +162,7 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
           const { x, y } = getCoordinates(i, r);
           const { dx, dy } = getLabelOffset(i);
           const anchor = getLabelAnchor(i);
-          const score = scores[axis.key];
+          const score = scores[axis.key] ?? 0;
 
           return (
             <text
@@ -164,10 +170,10 @@ export default function RadarChart({ scores, riskVerdict }: Props) {
               x={x + dx}
               y={y + dy}
               fill="#E0EBE0"
-              fontSize="10"
+              fontSize="11"
               fontFamily="monospace"
               textAnchor={anchor}
-              className="font-mono"
+              className="font-mono font-medium"
             >
               {axis.label} ({score})
             </text>

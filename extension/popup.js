@@ -35,6 +35,21 @@ document.addEventListener("DOMContentLoaded", () => {
     executeScan({ offerText: text });
   });
 
+  async function extractTextFromImage(dataUrl) {
+    if (typeof Tesseract !== "undefined") {
+      try {
+        showLoader("Running OCR text extraction...");
+        const worker = await Tesseract.createWorker("eng");
+        const { data: { text } } = await worker.recognize(dataUrl);
+        await worker.terminate();
+        return text ? text.trim() : "";
+      } catch (err) {
+        console.warn("OCR failed in popup:", err);
+      }
+    }
+    return "";
+  }
+
   // 2. Screenshot Scan click listener
   screenshotBtn.addEventListener("click", () => {
     // Disable interface
@@ -59,14 +74,20 @@ document.addEventListener("DOMContentLoaded", () => {
         // Clean Base64 prefix
         const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
 
-        // Extract readable page text from active tab
+        // 1. Try to extract readable page text from active tab
         chrome.scripting.executeScript(
           {
             target: { tabId: activeTab.id },
             func: () => document.body ? document.body.innerText : ""
           },
-          (results) => {
-            const pageText = (results && results[0] && results[0].result) ? results[0].result.trim() : "";
+          async (results) => {
+            let pageText = (results && results[0] && results[0].result) ? results[0].result.trim() : "";
+
+            // 2. If DOM text is empty (e.g. image viewer, canvas, PDF), run OCR on the screenshot
+            if (!pageText) {
+              pageText = await extractTextFromImage(dataUrl);
+            }
+
             if (pageText) {
               scanText.value = pageText.slice(0, 500) + (pageText.length > 500 ? "..." : "");
             }
@@ -142,12 +163,18 @@ document.addEventListener("DOMContentLoaded", () => {
     showLoader("Reading image file details...");
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const dataUrl = reader.result;
       const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
 
+      // Run OCR on uploaded image
+      const extractedText = await extractTextFromImage(dataUrl);
+      if (extractedText) {
+        scanText.value = extractedText.slice(0, 500) + (extractedText.length > 500 ? "..." : "");
+      }
+
       executeScan({
-        offerText: "",
+        offerText: extractedText,
         image: {
           data: base64Data,
           mimeType: file.type

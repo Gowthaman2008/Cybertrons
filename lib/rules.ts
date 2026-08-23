@@ -19,9 +19,9 @@
 import { OfferInput, RuleFlag, Severity } from "./types";
 
 const SEVERITY_WEIGHT: Record<Severity, number> = {
-  low: 6,
-  medium: 12,
-  high: 22,
+  low: 10,
+  medium: 25,
+  high: 45,
 };
 
 /** Common free/consumer email providers — legitimate employers rarely recruit from these. */
@@ -436,10 +436,23 @@ export function runRuleBasedChecks(input: OfferInput): RuleFlag[] {
   return flags;
 }
 
-/** Sum severity weights across all triggered flags, capped at 100. */
+/** Sum severity weights across all triggered flags, capped at 100 with dynamic high-severity scaling. */
 export function computeRuleScore(flags: RuleFlag[]): number {
-  const total = flags.reduce((sum, f) => sum + SEVERITY_WEIGHT[f.severity], 0);
-  return Math.min(100, total);
+  if (flags.length === 0) return 0;
+  const rawSum = flags.reduce((sum, f) => sum + SEVERITY_WEIGHT[f.severity], 0);
+
+  const hasHigh = flags.some((f) => f.severity === "high");
+  const numMedium = flags.filter((f) => f.severity === "medium").length;
+
+  if (hasHigh && flags.length >= 2) {
+    return Math.min(100, Math.max(82, rawSum));
+  } else if (hasHigh) {
+    return Math.min(100, Math.max(70, rawSum));
+  } else if (numMedium >= 2) {
+    return Math.min(100, Math.max(65, rawSum));
+  }
+
+  return Math.min(100, rawSum);
 }
 
 export { SEVERITY_WEIGHT };

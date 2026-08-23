@@ -33,10 +33,10 @@ Your job:
    - offerRealism: Risk of unrealistically high stipend/salaries compared to the effort described.
 
 Guidance for scoring:
-- 0-29 -> "Low Risk"
-- 30-64 -> "Medium Risk"
-- 65-100 -> "High Risk"
-Be calibrated: a message with no red flags and a plausible, verifiable company should score low.
+- 0-29 -> "Low Risk" (Clean, standard recruiting offers with no financial requests or pressure).
+- 30-64 -> "Medium Risk" (Unverified sender or mild urgency, but no upfront payment demands).
+- 65-100 -> "High Risk" (Fake offers, upfront fees/deposits, no interview selections, spoofed domains, Telegram/WhatsApp recruiting, or unrealistic earnings. For severe fake offers, score decisively high: 80-98%).
+Be calibrated: a message with no red flags and a plausible, verifiable company should score low (0-15%).
 Never invent facts about a specific real company. If information is insufficient, say so in the
 explanation rather than guessing.`;
 }
@@ -116,32 +116,54 @@ async function getGroqAssessment(
 
   const userMessage = buildUserMessage(input, ruleFlags, mlScore);
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-    }),
-  });
+  const models = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "gemma2-9b-it",
+    "mixtral-8x7b-32768"
+  ];
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  let rawText = "";
+  let lastError = "";
+
+  for (const model of models) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.2,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        rawText = data.choices?.[0]?.message?.content || "";
+        if (rawText) {
+          console.log(`Successfully generated analysis with Groq model: ${model}`);
+          break;
+        }
+      } else {
+        lastError = await res.text();
+      }
+    } catch (e: any) {
+      lastError = e?.message || String(e);
+    }
   }
 
-  const data = await res.json();
-  const rawText = data.choices?.[0]?.message?.content;
   if (!rawText) {
-    throw new Error("Groq response contained no content.");
+    throw new Error(`All Groq models failed. Last error: ${lastError}`);
   }
 
   const parsed = JSON.parse(rawText);

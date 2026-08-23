@@ -2,31 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
 async function analyzeWithGroq(apiKey: string, prompt: string): Promise<string> {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: "You are a forensic psychologist and cybersecurity awareness advisor." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.3,
-    }),
-  });
+  const models = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "gemma2-9b-it",
+    "mixtral-8x7b-32768"
+  ];
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Groq API returned ${res.status}: ${errText}`);
+  for (const model of models) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: "You are a forensic psychologist and cybersecurity awareness advisor." },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.3,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text) return text;
+      }
+    } catch (e) {
+      // Continue to next model
+    }
   }
 
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error("Empty response from Groq.");
-  return text;
+  throw new Error("All Groq models failed for psychology analysis.");
 }
 
 export async function POST(req: NextRequest) {
@@ -84,34 +97,62 @@ Provide a final short key takeaway on how the student can counter these psycholo
     }
   }
 
-  // 3. Fallback: Dynamic forensic psychology analysis based on offer context
+  // 3. Fallback: Deep contextual forensic psychology analysis based on offer details
   const textLower = (offerText || "").toLowerCase();
   const isHighRisk = (riskScore ?? 0) >= 50;
 
-  const dynamicPsychology = `1. Urgency / Pressure
-${textLower.includes("urgent") || textLower.includes("immediate") || textLower.includes("expire") || textLower.includes("today") || textLower.includes("24 hour")
-  ? "The recruiter applies artificial deadlines and pressure to bypass your critical reasoning, forcing you to act before verifying their claims."
-  : "The message emphasizes swift onboarding to keep momentum going and minimize the chance of thorough third-party vetting."}
+  // Extract contextual cues
+  const salaryMatch = (offerText || "").match(/(?:[$₹£]|rs\.?|inr|usd)\s*[\d,]+(?:\s*(?:per|\/)\s*(?:month|year|week|hr|day|annum|pm|pa))?/i);
+  const urgencyMatch = (offerText || "").match(/(?:immediate(?:ly)?|urgent(?:ly)?|within \d+ (?:hours?|days?)|expire[s]?|today|asap|deadline)/i);
+  const feeMatch = (offerText || "").match(/(?:deposit|registration|security fee|training fee|processing fee|laptop fee|courier|refundable)/i);
+  const domainMatch = (offerText || "").match(/[\w.-]+@(?:gmail|yahoo|hotmail|outlook|live|proton|zoho)\.com/i);
 
-2. Authority & Brand Mimicry
-${textLower.includes("congratulation") || textLower.includes("selected") || textLower.includes("offer")
-  ? "The communication adopts formal corporate terminology and congratulatory phrasing to establish unearned authority and make the proposal feel authentic."
-  : "The sender leverages standard business formatting to simulate legitimacy and deter suspicion."}
+  const sections: string[] = [];
 
-3. Financial Lure & Low-Barrier Hooks
-${textLower.includes("stipend") || textLower.includes("salary") || textLower.includes("$") || textLower.includes("rs") || textLower.includes("000")
-  ? "Disproportionate financial incentives are dangled with minimal prerequisite verification to exploit career ambitions and urgency."
-  : "The offer presents an unusually smooth path to employment without customary technical screenings."}
+  // Section 1: Urgency / Scarcity
+  if (urgencyMatch) {
+    sections.push(`1. Artificial Scarcity & Temporal Panic (${urgencyMatch[0]})
+The sender deliberately injects manufactured urgency (e.g. "${urgencyMatch[0]}") to trigger fear of missing out (FOMO). By inducing cognitive overload, they attempt to force an impulsive commitment before you can verify credentials.`);
+  } else {
+    sections.push(`1. Rapid Onboarding Illusion
+The message minimizes customary recruitment latency to maintain momentum, subtly discouraging the candidate from consulting career mentors or performing domain checks.`);
+  }
 
-4. Commitment & Compliance Hook
-${textLower.includes("pay") || textLower.includes("deposit") || textLower.includes("fee") || textLower.includes("bank") || textLower.includes("form")
-  ? "By celebrating your 'selection', the sender makes you feel obligated to comply with administrative requests, including sensitive data sharing or fees."
-  : "The message fosters a sense of personal obligation to complete documentation quickly."}
+  // Section 2: Authority & Brand Hijacking
+  if (domainMatch) {
+    sections.push(`2. Authority Mimicry & Shadow Channels (${domainMatch[0]})
+The recruiter claims corporate representation while operating from a free webmail handle (${domainMatch[0]}). This is a classic pretexting technique designed to project professional authority while evading corporate email audit trails.`);
+  } else if (companyName && companyName !== "Unknown") {
+    sections.push(`2. Brand Pretexting (${companyName})
+The communication invokes the name of "${companyName}" as an authority shield, exploiting the trust and goodwill of established institutions to lower your natural skepticism.`);
+  } else {
+    sections.push(`2. Perceived Legitimacy & Corporate Pretext
+The communication adopts formal corporate framing and HR terminology to establish unearned authority and simulate a legitimate hiring process.`);
+  }
 
-🛡️ Key Takeaway:
+  // Section 3: Financial Bait & Effort Distortion
+  if (salaryMatch) {
+    sections.push(`3. Anchor Lure & Financial Disproportion (${salaryMatch[0]})
+The prominent advertisement of "${salaryMatch[0]}" serves as a psychological anchor. High compensation for loosely defined responsibilities is engineered to trigger dopamine and motivate risk-taking behavior.`);
+  } else {
+    sections.push(`3. Low-Barrier Reward Hook
+The offer provides immediate gratification with minimal technical screening, creating an irresistible value proposition that bypasses normal due diligence.`);
+  }
+
+  // Section 4: Commitment Escalation & Sunk Cost
+  if (feeMatch) {
+    sections.push(`4. Sunk Cost & Fee Extortion Trap (${feeMatch[0]})
+The request for a "${feeMatch[0]}" leverages the psychological commitment of being 'selected'. Scammers use small upfront payments to initiate a sunk-cost trap where victims continue paying to protect previous investments.`);
+  } else {
+    sections.push(`4. Compliance Hook & Reciprocity
+By congratulating you on your 'selection', the sender induces a psychological sense of obligation, making you more compliant when subsequent requests for sensitive personal data are made.`);
+  }
+
+  // Final Takeaway
+  sections.push(`🛡️ Forensic Psychology Takeaway:
 ${isHighRisk
-  ? "Always independently verify recruiter credentials through the company's official careers portal. Never send advance deposits or banking details prior to a verified employment agreement."
-  : "Maintain standard diligence by confirming the sender's email domain directly with official organizational registries."}`;
+  ? "This message exhibits high-probability social engineering vectors designed to exploit career aspirations. Stop communication immediately and never transfer money or share identification documents."
+  : "While moderate in tone, maintain healthy skepticism: verify the recruiter independently via official corporate directories before proceeding."}`);
 
-  return NextResponse.json({ psychology: dynamicPsychology });
+  return NextResponse.json({ psychology: sections.join("\n\n") });
 }

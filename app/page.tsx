@@ -139,7 +139,7 @@ function Dashboard() {
       <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-8">
         {/* Navigation Tabs */}
         {view !== "landing" && (
-          <div className="flex border-b border-base-border mb-8 gap-6 text-sm font-display select-none">
+          <div className="flex border-b border-base-border mb-8 gap-4 sm:gap-6 text-xs sm:text-sm font-display select-none overflow-x-auto whitespace-nowrap scrollbar-none">
             <button
               type="button"
               onClick={() => {
