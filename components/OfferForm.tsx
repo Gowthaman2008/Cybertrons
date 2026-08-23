@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OfferInput } from "@/lib/types";
+import { createWorker } from "tesseract.js";
 
 interface Props {
   onSubmit: (input: OfferInput) => void;
@@ -19,6 +20,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isChatMode, setIsChatMode] = useState(false);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -64,6 +66,23 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
         const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8);
         setImagePreview(compressedBase64);
 
+        // Trigger client-side OCR scan
+        setIsOcrLoading(true);
+        (async () => {
+          try {
+            const worker = await createWorker("eng");
+            const { data: { text } } = await worker.recognize(compressedBase64);
+            await worker.terminate();
+            if (text && text.trim()) {
+              setOfferText(text.trim());
+            }
+          } catch (ocrErr) {
+            console.error("Client-side OCR failed:", ocrErr);
+          } finally {
+            setIsOcrLoading(false);
+          }
+        })();
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -88,6 +107,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
   function handleRemoveImage() {
     setImageFile(null);
     setImagePreview(null);
+    setOfferText("");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -204,10 +224,17 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
                 alt="Screenshot preview"
                 className="max-w-full max-h-full object-contain rounded"
               />
+              {isOcrLoading && (
+                <div className="absolute inset-0 bg-[#000000]/70 flex flex-col items-center justify-center text-center p-4 z-20">
+                  <span className="w-6 h-6 rounded-full border-2 border-brand-bright/30 border-t-brand-bright animate-spin mb-2" />
+                  <p className="text-[10px] text-brand-bright font-mono uppercase tracking-wider font-bold">Scanning image text...</p>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute top-2 right-2 bg-base-surface border border-base-border text-ink-primary hover:bg-risk-high hover:text-white rounded-full p-2 shadow-md transition-colors"
+                disabled={isOcrLoading}
+                className="absolute top-2 right-2 bg-base-surface border border-base-border text-ink-primary hover:bg-risk-high hover:text-white rounded-full p-2 shadow-md transition-colors z-30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

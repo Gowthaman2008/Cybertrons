@@ -69,4 +69,5 @@ export interface AnalysisResult {
   finalVerdict: Verdict;
   caseId: string;
   timestamp: number;
+  extractedText?: string;
 }

@@ -73,10 +73,14 @@ function Dashboard() {
 
       const data: AnalysisResult = await res.json();
       setResult(data);
+      if (data.extractedText) {
+        setCurrentOfferText(data.extractedText);
+      }
       setView("report"); // Switch to separate report view upon successful analysis
 
-      const previewText = input.offerText
-        ? input.offerText.slice(0, 70) + (input.offerText.length > 70 ? "…" : "")
+      const textToPreview = input.offerText || data.extractedText || "";
+      const previewText = textToPreview
+        ? textToPreview.slice(0, 70) + (textToPreview.length > 70 ? "…" : "")
         : "Image Scan - " + (input.companyName || "Unknown Company");
 
       const entry: HistoryEntry = {
