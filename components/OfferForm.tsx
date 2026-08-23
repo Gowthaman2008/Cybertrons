@@ -76,7 +76,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
         <button
           type="button"
           onClick={() => setIsChatMode(false)}
-          className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 ${
+          className={`px-4 py-1.5 rounded-full text-xs font-display font-semibold transition-all duration-200 ${
             !isChatMode
               ? "bg-brand text-white shadow-sm"
               : "text-ink-muted hover:text-ink-primary"
@@ -87,7 +87,7 @@ export default function OfferForm({ onSubmit, isLoading, errorMessage }: Props) 
         <button
           type="button"
           onClick={() => setIsChatMode(true)}
-          className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 ${
+          className={`px-4 py-1.5 rounded-full text-xs font-display font-semibold transition-all duration-200 ${
             isChatMode
               ? "bg-brand text-white shadow-sm"
               : "text-ink-muted hover:text-ink-primary"

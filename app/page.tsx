@@ -8,8 +8,9 @@ import ResultsPanel from "@/components/ResultsPanel";
 import ScanningState from "@/components/ScanningState";
 import HistoryPanel, { HistoryEntry } from "@/components/HistoryPanel";
 import ScamGame from "@/components/ScamGame";
-import { TubesBackground } from "@/components/ui/neon-flow";
+import { CyberMatrixBg } from "@/components/ui/cyber-matrix-hero";
 import { CommitsGrid } from "@/components/ui/commits-grid";
+import { SparklesCore } from "@/components/ui/sparkles";
 import { AnalysisResult, OfferInput } from "@/lib/types";
 
 const MAX_HISTORY = 8;
@@ -131,7 +132,7 @@ function Dashboard() {
       <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-8">
         {/* Navigation Tabs */}
         {view !== "landing" && (
-          <div className="flex border-b border-base-border mb-8 gap-6 text-sm font-mono select-none">
+          <div className="flex border-b border-base-border mb-8 gap-6 text-sm font-display select-none">
             <button
               type="button"
               onClick={() => {
@@ -171,33 +172,48 @@ function Dashboard() {
               // Landing Page: Full details about ScamCheck
               <div className="max-w-4xl mx-auto space-y-12 py-4 animate-fade-in">
                 {/* Hero section */}
-                <div className="text-center space-y-6 max-w-2xl mx-auto">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-[10px] font-mono font-bold text-brand-bright uppercase tracking-wider">
-                    🛡️ Multi-Layer Security Forensic Lab
-                  </span>
-                  <h2 className="font-display font-bold text-4xl sm:text-6xl tracking-tight text-ink-primary">
-                    Verify Offers. <span className="text-brand-bright">Detect Scams.</span>
-                  </h2>
-                  <p className="text-sm sm:text-base text-ink-muted leading-relaxed">
-                    Protect yourself from fake job templates, spoofed corporate identities, and recruitment scams. ScamCheck runs real-time rule parsing, template similarity matching, and advanced social engineering analysis before you share personal data.
-                  </p>
+                <div className="relative text-center space-y-6 max-w-2xl mx-auto py-8 rounded-2xl overflow-hidden border border-base-border/30 bg-base-surface/20 backdrop-blur-[2px]">
+                  <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+                    <SparklesCore
+                      id="landing-sparkles"
+                      background="transparent"
+                      minSize={0.6}
+                      maxSize={1.6}
+                      particleDensity={100}
+                      className="w-full h-full"
+                      particleColor="#00FF66"
+                      speed={0.4}
+                    />
+                  </div>
                   
-                  {/* Two Main Call-To-Action buttons in front */}
-                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setView("input")}
-                      className="w-full sm:w-auto px-6 py-3.5 bg-brand hover:bg-brand-bright text-black font-bold font-mono text-xs tracking-wider uppercase rounded-lg shadow-[0_0_15px_rgba(0,255,102,0.25)] hover:shadow-[0_0_20px_rgba(0,255,102,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
-                    >
-                      🔍 Check Scam Risk
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(true)}
-                      className="w-full sm:w-auto px-6 py-3.5 bg-base-raised hover:bg-base-raised/80 border border-base-border text-brand-bright font-bold font-mono text-xs tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
-                    >
-                      🔌 Add Extension
-                    </button>
+                  <div className="relative z-10 space-y-6 flex flex-col items-center px-6">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-[10px] font-mono font-bold text-brand-bright uppercase tracking-wider">
+                      🛡️ Multi-Layer Security Forensic Lab
+                    </span>
+                    <h2 className="font-display font-bold text-4xl sm:text-6xl tracking-tight text-ink-primary leading-[1.1]">
+                      Verify Offers. <span className="text-brand-bright">Detect Scams.</span>
+                    </h2>
+                    <p className="text-sm sm:text-base text-ink-muted leading-relaxed max-w-xl">
+                      Protect yourself from fake job templates, spoofed corporate identities, and recruitment scams. ScamCheck runs real-time rule parsing, template similarity matching, and advanced social engineering analysis before you share personal data.
+                    </p>
+                    
+                    {/* Two Main Call-To-Action buttons in front */}
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-2 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => setView("input")}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-brand hover:bg-brand-bright text-black font-bold font-mono text-xs tracking-wider uppercase rounded-lg shadow-[0_0_15px_rgba(0,255,102,0.25)] hover:shadow-[0_0_20px_rgba(0,255,102,0.55)] transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
+                      >
+                        🔍 Check Scam Risk
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowModal(true)}
+                        className="w-full sm:w-auto px-6 py-3.5 bg-base-raised hover:bg-base-raised/80 border border-base-border text-brand-bright font-bold font-mono text-xs tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-2 transform active:scale-95 duration-200"
+                      >
+                        🔌 Add Extension
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -321,9 +337,9 @@ export default function Home() {
         Loading Scam Forensics Lab...
       </div>
     }>
-      <TubesBackground className="min-h-screen">
+      <CyberMatrixBg>
         <Dashboard />
-      </TubesBackground>
+      </CyberMatrixBg>
     </Suspense>
   );
 }
